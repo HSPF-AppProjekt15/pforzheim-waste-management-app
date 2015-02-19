@@ -103,6 +103,9 @@ var application = angular.module('app.controllers', [])
     };
 
     function loadDatesForCurrentStreet() {
+		if(window.spinnerplugin) {
+			spinnerplugin.show();
+		}
         console.log("function loadDatesForCurrentStreet");
         $scope.dates = [];
         DB.loadDatesForCurrentStreet($scope.query.street, $scope.query.hnr).then(function (res) {
@@ -159,12 +162,14 @@ var application = angular.module('app.controllers', [])
 		});
     };
 
-
-    if (localStorageService.get('street') && localStorageService.get('hnr')) {
-        $scope.query.street = localStorageService.get('street');
-        $scope.query.hnr = parseInt(localStorageService.get('hnr'));
-        $scope.getDates();
-    }
+	document.addEventListener("deviceready", function abfrage (){
+		if (localStorageService.get('street') && localStorageService.get('hnr')) {
+			$scope.query.street = localStorageService.get('street');
+			$scope.query.hnr = parseInt(localStorageService.get('hnr'));
+			loadDatesForCurrentStreet();
+		}
+	},
+	false);
 
     $scope.updateHnr = function (street, hnr) {
 		if(street != "" && hnr > 0){
