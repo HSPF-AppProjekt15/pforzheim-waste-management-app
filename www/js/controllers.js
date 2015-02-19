@@ -6,7 +6,7 @@ var application = angular.module('app.controllers', [])
 .controller("AppCtrl", function AppCtrl($scope, $http, GeoLocation, DB, $modal, localStorageService,$q) {
     $scope.query = {
         "street": "",
-        "hnr": 0
+        "hnr": ""
     };
     $scope.dates = {
         "RM": [],
@@ -28,6 +28,9 @@ var application = angular.module('app.controllers', [])
 
     // TODO: zuerst interne DB abfragen, bevor Servlet abgefragt wird
     $scope.getDates = function () {
+		if(window.spinnerplugin) {
+			spinnerplugin.show();
+		}
         $scope.showDates = false;
         var dates = [];
         console.log("getDates Sende Straße und Hausnummer: "+ $scope.query.street+" "+$scope.query.hnr);
@@ -57,6 +60,10 @@ var application = angular.module('app.controllers', [])
                 }
             });
             DB.putDatesIntoDatabase(dates).then(function (res) {
+<<<<<<< HEAD
+=======
+                //$scope.showDates = true;
+>>>>>>> origin/master
                 saveStreetChoice();
                 loadDatesForCurrentStreet();
             }, function (err) {
@@ -67,23 +74,34 @@ var application = angular.module('app.controllers', [])
         error(function (data, status, headers, config) {
             console.log("getDates Fehler", data);
             $scope.showDates = false;
+			spinnerplugin.hide();
+			window.plugins.toast.showLongTop("Es konnte keine Verbindung aufgebaut werden,\nstellen sie eine Internetverbindung her");
         });
     };
 
+<<<<<<< HEAD
     $scope.getStreets = function (street) {
         console.log("function getStreets: "+ street);
+=======
+    $scope.getStreets = function (street, hnr) {
+        console.log("function getStreets", street);
+>>>>>>> origin/master
         $scope.streetSuggestions = [];
-        $scope.searchBtn = true;
-        if (street.length > 0) {
-            DB.getStreets(street).then(function (streetSuggestions) {
-                $scope.streetSuggestions = streetSuggestions;
-                $scope.showSuggestions = true;
-            }, function (err) {
-                console.log(err);
-                $scope.showSuggestions = false;
-            });
+		if(street != "" && hnr > 0){
+			$scope.searchBtn = true;
+			if (street.length > 0) {
+				DB.getStreets(street).then(function (streetSuggestions) {
+					$scope.streetSuggestions = streetSuggestions;
+					$scope.showSuggestions = true;
+				}, function (err) {
+					console.log(err);
+					$scope.showSuggestions = false;
+				});
 
-        }
+			}
+		} else {
+			$scope.searchBtn = false;
+		}
     };
 
     function saveStreetChoice() {
@@ -93,6 +111,9 @@ var application = angular.module('app.controllers', [])
     }
 
     function loadDatesForCurrentStreet() {
+		if(window.spinnerplugin) {
+			spinnerplugin.show();
+		}
         console.log("function loadDatesForCurrentStreet");
         $scope.dates = [];
         DB.loadDatesForCurrentStreet($scope.query.street, $scope.query.hnr).then(function (res) {
@@ -116,13 +137,21 @@ var application = angular.module('app.controllers', [])
                         last_index = $scope.dates.length - 1;
                         loop_last_change_cd = loop.collection_date;
                     }
+<<<<<<< HEAD
 
                     //console.log('{"' + res.rows.item(i).waste_type + '":"' + res.rows.item(i).collection_date + '"}');
+=======
+					$scope.showDates = true;
+                    console.log('{"' + res.rows.item(i).waste_type + '":"' + res.rows.item(i).collection_date + '"}');
+>>>>>>> origin/master
                 }
                 $scope.showDates = true;
             } else {
+				$scope.showDates = false;
                 console.log("loadDatesForCurrentStreet: no result")
+				window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
             }
+			spinnerplugin.hide();
         }, function (err) {
             console.error(err)
         })
@@ -152,11 +181,17 @@ var application = angular.module('app.controllers', [])
 
 
     $scope.getStreetFromLocation = function () {
+<<<<<<< HEAD
         console.log("getStreetFromLocation");
+=======
+		spinnerplugin.show();
+>>>>>>> origin/master
         GeoLocation.getStreetName().then(function (address) {
             if (address.street == "") {
                 $scope.showDates = false;
+				spinnerplugin.hide();
             } else {
+<<<<<<< HEAD
                 // Schauen, ob Straße in DB
                 searchForStreetName(address).then(function (result) {
                     $scope.query.street = result.street;
@@ -169,10 +204,21 @@ var application = angular.module('app.controllers', [])
                 })
 
 
+=======
+                $scope.query.street = address.street;
+                $scope.query.hnr = address.number;
+                $scope.getDates();
+>>>>>>> origin/master
             }
-        });
+        },
+		function (err) {
+			$scope.showDates = false;
+			spinnerplugin.hide();
+			window.plugins.toast.showLongTop("Es konnte kein GPS Signal gefunden werden\nMöglicherweise ist ihr GPS oder Internetverbindung deaktiviert");
+		});
     };
 
+<<<<<<< HEAD
 
     if (localStorageService.get('street') && localStorageService.get('hnr')) {
         //console.log(localStorageService.get('street'),localStorageService.get('hnr'));
@@ -184,6 +230,24 @@ var application = angular.module('app.controllers', [])
     $scope.updateHnr = function () {
         $scope.searchBtn = true;
     };
+=======
+	document.addEventListener("deviceready", function abfrage (){
+		if (localStorageService.get('street') && localStorageService.get('hnr')) {
+			$scope.query.street = localStorageService.get('street');
+			$scope.query.hnr = parseInt(localStorageService.get('hnr'));
+			loadDatesForCurrentStreet();
+		}
+	},
+	false);
+
+    $scope.updateHnr = function (street, hnr) {
+		if(street != "" && hnr > 0){
+			$scope.searchBtn = true;
+		} else {
+			$scope.searchBtn = false;
+		}
+    }
+>>>>>>> origin/master
 
     $scope.open = function () {
 
