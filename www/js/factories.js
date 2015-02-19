@@ -1,18 +1,21 @@
-angular.module('app.factories', [])
-    .factory('DB', function ($q, $cordovaSQLite, $http) {
+'use strict';
+
+var pfAppF = angular.module('app.factories', []);
+    pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
 
         var db_;
 
         // private methods
         var openDB_ = function (dbName) {
-
+            console.log("openDB_ called", dbName);
             var q = $q.defer();
-            /*if (window.cordova) {
-                db_ = $cordovaSQLite.openDB({ name: dbName+".db" }).then(function() {q.resolve(db_)},function(err) {q.reject(err)}); //device
-            }else{*/
-            db_ = window.openDatabase(dbName + ".db", '1', dbName, 1024 * 1024 * 100);
+            if (window.sqlitePlugin !== undefined) {
+                db_ = $cordovaSQLite.openDB( dbName+".db", 1);
+                q.resolve(db_);
+            }else{
+            db_ = window.openDatabase(dbName + ".db", '1', dbName, 200000 );
             q.resolve(db_); // browser
-            //}
+            }
             return q.promise;
         };
 
@@ -78,7 +81,7 @@ angular.module('app.factories', [])
                                 $http.get('streets.json').success(function (data) {
                                     streets_json = data;
                                     var insert_query = "INSERT INTO streets (street_name) VALUES (?)";
-                                    for (o in streets_json) {
+                                    for (var o in streets_json) {
                                         $cordovaSQLite.execute(db, insert_query, [streets_json[o].s]);
                                     }
                                     q.resolve();
@@ -91,6 +94,9 @@ angular.module('app.factories', [])
                         });
                     });
                 });
+            }, function (err) {
+                console.log(err);
+                q.reject(err);
             });
             return q.promise;
         };
@@ -112,7 +118,35 @@ angular.module('app.factories', [])
             });
 
             return q.promise;
-        }
+        };
+
+        var isStreetInDB = function(street) {
+            // erst schauen, ob Straße genau so in DB ist
+            var query = "SELECT street_name FROM streets WHERE street_name = ?",
+                q = $q.defer();
+
+            console.log("isStreetInDB 1: "+street);
+            selectFromTable_(query, [street]).then(function (res) {
+                if (res.rows.length > 0) {
+                    console.log("DB.isStreetInDB Straße exakt: " + street);
+                    q.resolve(street);
+                } else {
+
+                    console.log("isStreetInDB 2: "+street);
+                    // wenn nicht, dann schauen, ob genau eine ähnliche Straße in DB ist
+                    query = "SELECT street_name FROM streets WHERE street_name LIKE ?";
+                    selectFromTable_(query, [street + '%']).then(function (res) {
+                        if (res.rows.length == 1) {
+                            console.log("DB.isStreetInDB Straße ähnlich: " + res.rows.item(0).street_name);
+                            q.resolve(res.rows.item(0).street_name);
+                        } else {
+                            q.reject();
+                        }
+                    });
+                }
+            });
+            return q.promise;
+        };
 
         var loadDatesForCurrentStreet = function (street, number) {
             var query = "SELECT waste_type,strftime('%d.%m.%Y',collection_date) as collection_date FROM collection_dates WHERE street_id=(SELECT street_id FROM streets WHERE street_name= ? ) AND house_number= ? AND collection_date BETWEEN date('now','localtime') AND date('now', '+21 days','localtime') ORDER BY collection_dates.collection_date,1",
@@ -138,18 +172,20 @@ angular.module('app.factories', [])
             }
 
             return q.promise;
-        }
+        };
 
         return {
             initDB: initDB,
             getStreets: getStreets,
             loadDatesForCurrentStreet: loadDatesForCurrentStreet,
-            putDatesIntoDatabase: putDatesIntoDatabase
+            putDatesIntoDatabase: putDatesIntoDatabase,
+            isStreetInDB: isStreetInDB
         }
-    })
-    .factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
+    });
+    pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
         return {
             getStreetName: function () {
+                console.log("GeoLocation.getStreetName()");
                 var posOptions = {
                         timeout: 10000,
                         enableHighAccuracy: true
@@ -167,9 +203,11 @@ angular.module('app.factories', [])
                             long = position.coords.longitude,
                             url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&language=de&location_type=ROOFTOP&result_type=street_address&key=" + googleGeoLoc_API_Key;
 
+                        console.log("getCurrentPosition: "+lat+","+long);
+
                         $http.get(url).
                         success(function (data, status, headers, config) {
-                            console.log("Antwort erhalten:", data);
+                            console.log("GeoLocation.getStreetName Antwort erhalten:"+ data);
                             var address_components = data.results[0].address_components;
                             for (var i = 0; i < address_components.length; i++) {
                                 if (address_components[i].types[0] == "route") {
@@ -181,8 +219,8 @@ angular.module('app.factories', [])
                             deferred.resolve(address);
                         }).
                         error(function (data, status, headers, config) {
-                            console.log("Fehler", data);
-                            deferred.reject("Fehler", data);
+                            console.log("GeoLocation Fehler"+ data);
+                            deferred.reject("GeoLocation Fehler", data);
                         });
                     }, function (err) {
                         // error
@@ -191,4 +229,4 @@ angular.module('app.factories', [])
                 return deferred.promise;
             }
         };
-    });;
+    });

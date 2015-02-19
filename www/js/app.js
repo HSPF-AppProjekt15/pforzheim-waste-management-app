@@ -10,7 +10,12 @@ angular.module('starter', ['ui.bootstrap', 'ngCordova', 'LocalStorageModule', 'a
 })
 
 .run(function (DB) {
-    document.addEventListener("deviceready", function () {
+        if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
+            document.addEventListener("deviceready", onDeviceReady, false);
+        } else {
+            onDeviceReady();
+        }
+    //document.addEventListener("deviceready", function () {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
         /*if(window.cordova && window.cordova.plugins.Keyboard) {
@@ -20,12 +25,13 @@ angular.module('starter', ['ui.bootstrap', 'ngCordova', 'LocalStorageModule', 'a
       StatusBar.styleDefault();
     }
 */
+        function onDeviceReady() {
+            DB.initDB().then(function () {
+                console.log("initDB promise resolved");
+            }, function (err) {
+                console.log("App.js Fehler:", err);
+            });
+        };
 
-        DB.initDB().then(function () {
-            console.log("initDB promise resolved");
-        }, function (err) {
-            console.log("Fehler:", err);
-        });
-
-    }, false);
+    //}, false);
 });

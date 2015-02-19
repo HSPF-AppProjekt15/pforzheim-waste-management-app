@@ -3,7 +3,7 @@ const googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
 var application = angular.module('app.controllers', [])
 
-.controller("AppCtrl", function AppCtrl($scope, $cordovaSQLite, $http, GeoLocation, DB, $modal, localStorageService) {
+.controller("AppCtrl", function AppCtrl($scope, $http, GeoLocation, DB, $modal, localStorageService,$q) {
     $scope.query = {
         "street": "",
         "hnr": 0
@@ -30,10 +30,10 @@ var application = angular.module('app.controllers', [])
     $scope.getDates = function () {
         $scope.showDates = false;
         var dates = [];
-        console.log("Sende Straße und Hausnummer", $scope.query)
+        console.log("getDates Sende Straße und Hausnummer: "+ $scope.query.street+" "+$scope.query.hnr);
         $http.get(pwm_url + '?strasse=' + $scope.query.street + '+&hnr=' + $scope.query.hnr).
         success(function (data, status, headers, config) {
-            console.log("Antwort erhalten:", data);
+            console.log("getDates Antwort erhalten:", data);
 
 
             // In Datenbank schreiben
@@ -57,7 +57,6 @@ var application = angular.module('app.controllers', [])
                 }
             });
             DB.putDatesIntoDatabase(dates).then(function (res) {
-                $scope.showDates = true;
                 saveStreetChoice();
                 loadDatesForCurrentStreet();
             }, function (err) {
@@ -66,13 +65,13 @@ var application = angular.module('app.controllers', [])
 
         }).
         error(function (data, status, headers, config) {
-            console.log("Fehler", data);
+            console.log("getDates Fehler", data);
             $scope.showDates = false;
         });
     };
 
     $scope.getStreets = function (street) {
-        console.log("function getStreets", street);
+        console.log("function getStreets: "+ street);
         $scope.streetSuggestions = [];
         $scope.searchBtn = true;
         if (street.length > 0) {
@@ -91,7 +90,7 @@ var application = angular.module('app.controllers', [])
         console.log("function saveStreetChoice");
         localStorageService.set('street', $scope.query.street);
         localStorageService.set('hnr', $scope.query.hnr);
-    };
+    }
 
     function loadDatesForCurrentStreet() {
         console.log("function loadDatesForCurrentStreet");
@@ -103,8 +102,8 @@ var application = angular.module('app.controllers', [])
                 var loop;
                 for (var i = 0; i < res.rows.length; i++) {
                     loop = res.rows.item(i);
-                    console.log("loop", loop);
-                    console.log("loop_before", loop_last_change_cd);
+                    //console.log("loop", loop);
+                    //console.log("loop_before", loop_last_change_cd);
                     if (loop.collection_date == loop_last_change_cd) {
                         // collection_date ist gleich, waste_type wird dem zweiten property des objects dates hinzugefügt
                         $scope.dates[last_index].waste_type.push(loop.waste_type);
@@ -118,30 +117,65 @@ var application = angular.module('app.controllers', [])
                         loop_last_change_cd = loop.collection_date;
                     }
 
-                    console.log('{"' + res.rows.item(i).waste_type + '":"' + res.rows.item(i).collection_date + '"}');
+                    //console.log('{"' + res.rows.item(i).waste_type + '":"' + res.rows.item(i).collection_date + '"}');
                 }
+                $scope.showDates = true;
             } else {
                 console.log("loadDatesForCurrentStreet: no result")
             }
         }, function (err) {
             console.error(err)
         })
-    };
+    }
+        function searchForStreetName(address, count ) {
+            console.log("searchForStreetName", address,count);
+            count = count || 0;
+            var street = address.street,
+                def = $q.defer();
+            DB.isStreetInDB(street).then(function (res_street) {
+                def.resolve({street:res_street,number:address.number});
+            }, function () {
+                // Maximal 4 Durchgänge
+                if(count<4) {
+
+                    searchForStreetName({street: street.substring(0, street.length - 1), number: address.number},++count).then(function (result) {
+                        def.resolve(result);
+                    }, function (street) {
+                        def.reject(street);
+                    });
+                } else {
+                    def.reject(street);
+                }
+            });
+            return def.promise;
+        }
+
 
     $scope.getStreetFromLocation = function () {
+        console.log("getStreetFromLocation");
         GeoLocation.getStreetName().then(function (address) {
             if (address.street == "") {
                 $scope.showDates = false;
             } else {
-                $scope.query.street = address.street;
-                $scope.query.hnr = address.number;
-                getDates();
+                // Schauen, ob Straße in DB
+                searchForStreetName(address).then(function (result) {
+                    $scope.query.street = result.street;
+                    $scope.query.hnr = result.number;
+                    $scope.getDates();
+                }, function (err) {
+                    console.log(err);
+                    // TODO: wenn Straße nicht in DB ist, Error anzeigen
+                    console.log("getStreetFromLocation: Straße nicht in PF gefunden: "+ address.street);
+                })
+
+
             }
         });
     };
 
 
-    if (localStorageService.get('street') != "" && localStorageService.get('hnr') != "") {
+    if (localStorageService.get('street') && localStorageService.get('hnr')) {
+        //console.log(localStorageService.get('street'),localStorageService.get('hnr'));
         $scope.query.street = localStorageService.get('street');
         $scope.query.hnr = parseInt(localStorageService.get('hnr'));
         $scope.getDates();
@@ -149,7 +183,7 @@ var application = angular.module('app.controllers', [])
 
     $scope.updateHnr = function () {
         $scope.searchBtn = true;
-    }
+    };
 
     $scope.open = function () {
 

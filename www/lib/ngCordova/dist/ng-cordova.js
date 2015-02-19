@@ -2379,6 +2379,7 @@ angular.module('ngCordova.plugins.geolocation', [])
 
     return {
       getCurrentPosition: function (options) {
+
         var q = $q.defer();
 
         navigator.geolocation.getCurrentPosition(function (result) {

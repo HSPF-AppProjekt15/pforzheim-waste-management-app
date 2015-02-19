@@ -1,0 +1,24 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "com.brodysoft.sqlitePlugin": {
+            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
+        },
+        "hu.dpal.phonegap.plugins.SpinnerDialog": {
+            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
+        },
+        "org.apache.cordova.console": {
+            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
+        },
+        "org.apache.cordova.geolocation": {
+            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
+        }
+    },
+    "dependent_plugins": {}
+}
