@@ -8,42 +8,60 @@
     background-repeat: no-repeat;
     background-position: center center;
     position: relative;
-    top: 6px;
+    /*top: 6px;*/
 }
+
 .icon.icon-waste.icon-RM {
-     background-image: url("../img/trash-can-rest-7.png");
- }
+    background-image: url("../img/trash-can-rest-7.png");
+}
+
 .icon.icon-waste.icon-RM14 {
     background-image: url("../img/trash-can-rest-14.png");
 }
+
 .icon.icon-waste.icon-Papier {
     background-image: url("../img/trash-can-papier.png");
 }
+
 .icon.icon-waste.icon-Bio {
     background-image: url("../img/trash-can-bio.png");
 }
+
 .icon.icon-waste.icon-Gelb {
     background-image: url("../img/trash-can-gelb.png");
 }
-.item-icon-left .icon.icon-waste{
+
+.item-icon-left .icon.icon-waste {
     position: absolute;
 }
 
 #extraPaddingToShowAllContent {
-	padding-top: 6rem;
+    padding-top: 6rem;
 }
 
 .noMargin {
-	margin-bottom: 0px;
+    margin-bottom: 0px;
 }
 
 .noPadding {
-	padding: 0;
+    padding: 0;
 }
 
 .panel {
-	border: 0; 
-	border-radius: 0;
-	-webkit-box-shadow: 0;
-	box-shadow: 0;
+    border: none;
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+.table tbody>tr>td.vert-align {
+    vertical-align: middle;
+}
+
+.table tbody>tr>td.iconColumn {
+    width: 40px;
+}
+
+.table tbody>tr>td.noBorder {
+    border-top: none;
 }

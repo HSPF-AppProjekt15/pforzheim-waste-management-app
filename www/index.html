@@ -35,7 +35,7 @@
                 <div class="panel-footer">
                     <div class="row">
                         <div class="form-group col-xs-9">
-                            <input type="text" class="form-control" placeholder="Straßenname" ng-model="query.street" typeahead="street for street in streetSuggestions | filter:$viewValue | limitTo:8" id="searchInputStrasse" ng-keydown="checkKeyDown($event)" ng-change="getStreets(query.street)" />
+                            <input type="text" class="form-control" placeholder="Straßenname" ng-model="query.street" ng-keydown="checkKeyDown($event)" ng-change="getStreets(query.street)" typeahead="street for street in streetSuggestions | filter:$viewValue | limitTo:5" typeahead-wait-ms="150" typeahead-focus-first="false" id="searchInputStrasse" />
                         </div>
                         <div class="form-group col-xs-3">
                             <input type="number" class="form-control" placeholder="Hausnummer" ng-model="query.hnr" id="searchInputHnr" ng-change="updateHnr()" />
@@ -57,8 +57,8 @@
                     <h3>Nächste Leerungen</h3>
                     <table class="table table-striped">
                         <tr ng-repeat="date in dates">
-                            <td>{{ date.collection_date }}</td>
-                            <td><i class="icon icon-waste icon-{{ type }}" ng-repeat="type in date.waste_type"></i>
+                            <td class="vert-align">{{ date.collection_date }}</td>
+                            <td class="vert-align"><i class="icon icon-waste icon-{{ type }}" ng-repeat="type in date.waste_type"></i>
                             </td>
                         </tr>
                     </table>
@@ -82,8 +82,8 @@
                         </div>
                         <div class="col-xs-5">
                             <div class="btn-group pull-right">
-                                <label class="btn btn-danger" ng-model="notifications" btn-radio="false">Aus</label>
-                                <label class="btn btn-success" ng-model="notifications" btn-radio="true">An</label>
+                                <label class="btn btn-danger" ng-model="notifications" btn-radio="0">Aus</label>
+                                <label class="btn btn-success" ng-model="notifications" btn-radio="1">An</label>
                             </div>
                         </div>
                     </div>
@@ -92,64 +92,82 @@
 
                     <div ng-show="notifications">
                         <h4>Benachrichtigungen</h4>
+                        <table class="table">
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-Bio"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Biotonne
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-danger" ng-model="pushBio" btn-radio="0">Aus</label>
+                                        <label class="btn btn-success" ng-model="pushBio" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
 
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-Gelb"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Gelbe Tonne
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-danger" ng-model="pushGelb" btn-radio="0">Aus</label>
+                                        <label class="btn btn-success" ng-model="pushGelb" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
 
-                        <div class="row">
-                            <div class="col-xs-7">
-                                <i class="icon icon-waste icon-Bio"></i> Biotonne
-                            </div>
-                            <div class="col-xs-5">
-                                <div class="btn-group pull-right">
-                                    <label class="btn btn-danger" ng-model="pushBio" btn-radio="0">Aus</label>
-                                    <label class="btn btn-success" ng-model="pushBio" btn-radio="1">An</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-7">
-                                <i class="icon icon-waste icon-Gelb"></i>Gelbe Tonne
-                            </div>
-                            <div class="col-xs-5">
-                                <div class="btn-group pull-right">
-                                    <label class="btn btn-danger" ng-model="pushGelb" btn-radio="0">Aus</label>
-                                    <label class="btn btn-success" ng-model="pushGelb" btn-radio="1">An</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-7">
-                                <i class="icon icon-waste icon-Papier"></i>Papiertonne
-                            </div>
-                            <div class="col-xs-5">
-                                <div class="btn-group pull-right">
-                                    <label class="btn btn-danger" ng-model="pushPapier" btn-radio="0">Aus</label>
-                                    <label class="btn btn-success" ng-model="pushPapier" btn-radio="1">An</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-7">
-                                <i class="icon icon-waste icon-RM"></i>Restmüll 7-tägig
-                            </div>
-                            <div class="col-xs-5">
-                                <div class="btn-group pull-right">
-                                    <label class="btn btn-danger" ng-model="pushRM" btn-radio="0">Aus</label>
-                                    <label class="btn btn-success" ng-model="pushRM" btn-radio="1">An</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-7">
-                                <i class="icon icon-waste icon-RM14"></i>Restmüll 14-tägig
-                            </div>
-                            <div class="col-xs-5">
-                                <div class="btn-group pull-right">
-                                    <label class="btn btn-danger" ng-model="pushRM14" btn-radio="0">Aus</label>
-                                    <label class="btn btn-success" ng-model="pushRM14" btn-radio="1">An</label>
-                                </div>
-                            </div>
-                        </div>
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-Papier"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Papiertonne
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-danger" ng-model="pushPapier" btn-radio="0">Aus</label>
+                                        <label class="btn btn-success" ng-model="pushPapier" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
 
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-RM"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Restmüll 7-tägig
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-danger" ng-model="pushRM" btn-radio="0">Aus</label>
+                                        <label class="btn btn-success" ng-model="pushRM" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-RM14"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Restmüll 14-tägig
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-danger" ng-model="pushRM14" btn-radio="0">Aus</label>
+                                        <label class="btn btn-success" ng-model="pushRM14" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
 
 
                         <!--<ul class="list">
@@ -258,17 +276,19 @@
         </div>
     </div>
 
-    <!-- angularjs js -->
+    <!-- angularjs cordova bootstrap -->
     <script type="text/javascript" src="lib/angular.min.js"></script>
     <script type="text/javascript" src="lib/ngCordova/dist/ng-cordova.js"></script>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="lib/ui-bootstrap-tpls-0.12.0.min.js"></script>
+    <script type="text/javascript" src="lib/angular-local-storage.min.js"></script>
 
 
-    <!-- your app's js -->
+
+    <!-- controller -->
     <script type="text/javascript" src="js/app.js"></script>
     <script type="text/javascript" src="js/controllers.js"></script>
-	<script type="text/javascript" src="js/factories.js"></script>
+    <script type="text/javascript" src="js/factories.js"></script>
 </body>
 
 </html>
