@@ -1,5 +1,5 @@
 angular.module('app.factories',[] )
-.factory('DB', function($q, $cordovaSQLite) {
+.factory('DB', function($q, $cordovaSQLite,$http) {
 
         var db_;
 
@@ -7,12 +7,12 @@ angular.module('app.factories',[] )
         var openDB_ = function(dbName){
 
             var q = $q.defer();
-            if (window.cordova) {
+            /*if (window.cordova) {
                 db_ = $cordovaSQLite.openDB({ name: dbName+".db" }).then(function() {q.resolve(db_)},function(err) {q.reject(err)}); //device
-            }else{
+            }else{*/
                 db_ = window.openDatabase(dbName+".db", '1', dbName, 1024 * 1024 * 100);
                 q.resolve(db_); // browser
-            }
+            //}
             return q.promise;
         };
 

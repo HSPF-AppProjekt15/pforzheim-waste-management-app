@@ -1,14 +1,21 @@
 const pwm_url="http://pfwastemanagementenv-hd7anwmmbc.elasticbeanstalk.com/ServletConnectorServlet";
 const googleGeoLoc_API_Key="AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
-angular.module('app.controllers',[] )
+var application = angular.module('app.controllers',[] )
 
-.controller("AppCtrl", function AppCtrl($scope, $cordovaSQLite,$http,GeoLocation,DB) {
+.controller("AppCtrl", function AppCtrl($scope,$cordovaSQLite,$http,GeoLocation,DB) {
         $scope.query = {"street":"","hnr":0};
         $scope.dates = {"RM":[],"RM14":[],"Bio":[],"Papier":[],"Gelb":[]};
         $scope.showDates = false;
         $scope.streetSuggestions = [];
-        $scope.showSuggestions = false;
+		$scope.searchBtn = false;
+		
+		$scope.notifications = false;
+		$scope.pushBio = 0;
+		$scope.pushGelb = 1;
+		$scope.pushPapier = 1;
+		$scope.pushRM = 0;
+		$scope.pushRM14 = 1;
 
         // TODO: zuerst interne DB abfragen, bevor Servlet abgefragt wird
         $scope.getDates = function() {
@@ -52,6 +59,7 @@ angular.module('app.controllers',[] )
         $scope.getStreets = function (street) {
             console.log("function getStreets",street);
             $scope.streetSuggestions=[];
+			$scope.searchBtn = true;
             if (street.length>0) {
                 DB.getStreets(street).then(function(streetSuggestions) {
                     $scope.streetSuggestions=streetSuggestions;
@@ -121,7 +129,75 @@ angular.module('app.controllers',[] )
             $scope.query.street=window.localStorage.getItem("street");
             $scope.query.hnr=parseInt(window.localStorage.getItem("hnr"));
             $scope.getDates()
-        }
+        } 
+		
+		$scope.updateHnr = function () {
+			$scope.searchBtn = true;
+		}
 
+		$scope.open = function () {
 
-    });
+			var modalInstance = $modal.open({
+				templateUrl: 'myModalContent.html',
+				controller: 'ModalInstanceCtrl',
+				size: 'sm',
+				resolve: {}
+			});
+		};
+		/*
+		$scope.$watch('notifications', function (newValue, oldValue) {
+			// Check if value has changes
+			if (newValue === oldValue) {
+				return;
+			}
+			// To do: register next push
+		}, true);
+
+		$scope.$watch('pushBio', function (newValue, oldValue) {
+			// Check if value has changes
+			if (newValue === oldValue) {
+				return;
+			}
+			// To do: register next push
+		}, true);
+
+		$scope.$watch('pushGelb', function (newValue, oldValue) {
+			// Check if value has changes
+			if (newValue === oldValue) {
+				return;
+			}
+			// To do: register next push
+		}, true);
+
+		$scope.$watch('pushPapier', function (newValue, oldValue) {
+			// Check if value has changes
+			if (newValue === oldValue) {
+				return;
+			}
+			// To do: register next push
+		}, true);
+
+		$scope.$watch('pushRM', function (newValue, oldValue) {
+			// Check if value has changes
+			if (newValue === oldValue) {
+				return;
+			}
+			// To do: register next push
+		}, true);
+
+		$scope.$watch('pushRM14', function (newValue, oldValue) {
+			// Check if value has changes
+			if (newValue === oldValue) {
+				return;
+			}
+			// To do: register next push
+			console.log("changed to: " + newValue);
+		}, true);*/
+});
+
+/*
+application.controller('ModalInstanceCtrl', function ($scope, $modalInstance) {
+    $scope.ok = function () {
+        $modalInstance.dismiss('cancel');
+    };
+});*/

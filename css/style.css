@@ -28,3 +28,22 @@
 .item-icon-left .icon.icon-waste{
     position: absolute;
 }
+
+#extraPaddingToShowAllContent {
+	padding-top: 6rem;
+}
+
+.noMargin {
+	margin-bottom: 0px;
+}
+
+.noPadding {
+	padding: 0;
+}
+
+.panel {
+	border: 0; 
+	border-radius: 0;
+	-webkit-box-shadow: 0;
+	box-shadow: 0;
+}
