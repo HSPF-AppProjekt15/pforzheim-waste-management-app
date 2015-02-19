@@ -3,7 +3,7 @@ const googleGeoLoc_API_Key="AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
 var application = angular.module('app.controllers',[] )
 
-.controller("AppCtrl", function AppCtrl($scope,$cordovaSQLite,$http,GeoLocation,DB) {
+.controller("AppCtrl", function AppCtrl($scope,$cordovaSQLite,$http,GeoLocation,DB, $modal) {
         $scope.query = {"street":"","hnr":0};
         $scope.dates = {"RM":[],"RM14":[],"Bio":[],"Papier":[],"Gelb":[]};
         $scope.showDates = false;
@@ -195,9 +195,9 @@ var application = angular.module('app.controllers',[] )
 		}, true);*/
 });
 
-/*
+
 application.controller('ModalInstanceCtrl', function ($scope, $modalInstance) {
     $scope.ok = function () {
         $modalInstance.dismiss('cancel');
     };
-});*/
+});
