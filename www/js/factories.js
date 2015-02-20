@@ -144,7 +144,10 @@ var pfAppF = angular.module('app.factories', []);
                         }
                     });
                 }
-            });
+            },
+			function (err) {
+				console.log("Error: ", err);
+			});
             return q.promise;
         };
 

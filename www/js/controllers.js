@@ -70,8 +70,12 @@ var application = angular.module('app.controllers', [])
         error(function (data, status, headers, config) {
             console.log("getDates Fehler", data);
             $scope.showDates = false;
-			spinnerplugin.hide();
-			window.plugins.toast.showLongTop("Es konnte keine Verbindung aufgebaut werden,\nstellen sie eine Internetverbindung her");
+			if(window.spinnerplugin) {
+				spinnerplugin.hide();
+			}
+			if(window.spinnerplugin) {
+				window.plugins.toast.showLongTop("Es konnte keine Verbindung aufgebaut werden,\nstellen sie eine Internetverbindung her");
+			}
         });
     };
 
@@ -134,9 +138,13 @@ var application = angular.module('app.controllers', [])
             } else {
 				$scope.showDates = false;
                 console.log("loadDatesForCurrentStreet: no result")
-				window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
+				if(window.spinnerplugin) {
+					window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
+				}
             }
-			spinnerplugin.hide();
+			if(window.spinnerplugin) {
+				spinnerplugin.hide();
+			}
         }, function (err) {
             console.error(err)
         })
@@ -176,7 +184,9 @@ var application = angular.module('app.controllers', [])
         GeoLocation.getStreetName().then(function (address) {
             if (address.street == "") {
                 $scope.showDates = false;
-				spinnerplugin.hide();
+				if(window.spinnerplugin) {
+					spinnerplugin.hide();
+				}
             } else {
 
                 // Schauen, ob Straße in DB
@@ -194,8 +204,12 @@ var application = angular.module('app.controllers', [])
         },
 		function (err) {
 			$scope.showDates = false;
-			spinnerplugin.hide();
-			window.plugins.toast.showLongTop("Es konnte kein GPS Signal gefunden werden\nMöglicherweise ist ihr GPS oder Internetverbindung deaktiviert");
+			if(window.spinnerplugin) {
+				spinnerplugin.hide();
+			}
+			if(window.spinnerplugin) {
+				window.plugins.toast.showLongTop("Es konnte kein GPS Signal gefunden werden\nMöglicherweise ist ihr GPS oder Internetverbindung deaktiviert");
+			}
 		});
     };
 
