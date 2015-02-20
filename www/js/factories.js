@@ -9,7 +9,7 @@ var pfAppF = angular.module('app.factories', []);
         var openDB_ = function (dbName) {
             console.log("openDB_ called", dbName);
             var q = $q.defer();
-            if (window.sqlitePlugin !== undefined) {
+            if (window.sqlitePlugin !== undefined && navigator.userAgent.match(/(iPhone|iPod|iPad)/)) {
                 db_ = $cordovaSQLite.openDB( dbName+".db", 1);
                 q.resolve(db_);
             }else{
