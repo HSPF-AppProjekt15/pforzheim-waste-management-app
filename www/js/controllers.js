@@ -80,8 +80,7 @@ var application = angular.module('app.controllers', [])
         console.log("function getStreets: "+ street);
 
         $scope.streetSuggestions = [];
-		if(street != "" && hnr > 0){
-			$scope.searchBtn = true;
+
 			if (street.length > 0) {
 				DB.getStreets(street).then(function (streetSuggestions) {
 					$scope.streetSuggestions = streetSuggestions;
@@ -92,9 +91,6 @@ var application = angular.module('app.controllers', [])
 				});
 
 			}
-		} else {
-			$scope.searchBtn = false;
-		}
     };
 
     function saveStreetChoice() {
@@ -213,8 +209,8 @@ var application = angular.module('app.controllers', [])
 	},
 	false);
 
-    $scope.updateHnr = function (street, hnr) {
-		if(street != "" && hnr > 0){
+    $scope.updateSearchBtn = function () {
+		if($scope.query.street != "" && $scope.query.hnr > 0){
 			$scope.searchBtn = true;
 		} else {
 			$scope.searchBtn = false;
