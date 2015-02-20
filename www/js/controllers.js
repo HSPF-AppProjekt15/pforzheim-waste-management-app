@@ -60,10 +60,6 @@ var application = angular.module('app.controllers', [])
                 }
             });
             DB.putDatesIntoDatabase(dates).then(function (res) {
-<<<<<<< HEAD
-=======
-                //$scope.showDates = true;
->>>>>>> origin/master
                 saveStreetChoice();
                 loadDatesForCurrentStreet();
             }, function (err) {
@@ -79,13 +75,10 @@ var application = angular.module('app.controllers', [])
         });
     };
 
-<<<<<<< HEAD
-    $scope.getStreets = function (street) {
-        console.log("function getStreets: "+ street);
-=======
+
     $scope.getStreets = function (street, hnr) {
-        console.log("function getStreets", street);
->>>>>>> origin/master
+        console.log("function getStreets: "+ street);
+
         $scope.streetSuggestions = [];
 		if(street != "" && hnr > 0){
 			$scope.searchBtn = true;
@@ -137,13 +130,9 @@ var application = angular.module('app.controllers', [])
                         last_index = $scope.dates.length - 1;
                         loop_last_change_cd = loop.collection_date;
                     }
-<<<<<<< HEAD
 
                     //console.log('{"' + res.rows.item(i).waste_type + '":"' + res.rows.item(i).collection_date + '"}');
-=======
-					$scope.showDates = true;
-                    console.log('{"' + res.rows.item(i).waste_type + '":"' + res.rows.item(i).collection_date + '"}');
->>>>>>> origin/master
+
                 }
                 $scope.showDates = true;
             } else {
@@ -181,17 +170,17 @@ var application = angular.module('app.controllers', [])
 
 
     $scope.getStreetFromLocation = function () {
-<<<<<<< HEAD
+
         console.log("getStreetFromLocation");
-=======
+
 		spinnerplugin.show();
->>>>>>> origin/master
+
         GeoLocation.getStreetName().then(function (address) {
             if (address.street == "") {
                 $scope.showDates = false;
 				spinnerplugin.hide();
             } else {
-<<<<<<< HEAD
+
                 // Schauen, ob Straße in DB
                 searchForStreetName(address).then(function (result) {
                     $scope.query.street = result.street;
@@ -203,12 +192,6 @@ var application = angular.module('app.controllers', [])
                     console.log("getStreetFromLocation: Straße nicht in PF gefunden: "+ address.street);
                 })
 
-
-=======
-                $scope.query.street = address.street;
-                $scope.query.hnr = address.number;
-                $scope.getDates();
->>>>>>> origin/master
             }
         },
 		function (err) {
@@ -218,19 +201,7 @@ var application = angular.module('app.controllers', [])
 		});
     };
 
-<<<<<<< HEAD
 
-    if (localStorageService.get('street') && localStorageService.get('hnr')) {
-        //console.log(localStorageService.get('street'),localStorageService.get('hnr'));
-        $scope.query.street = localStorageService.get('street');
-        $scope.query.hnr = parseInt(localStorageService.get('hnr'));
-        $scope.getDates();
-    }
-
-    $scope.updateHnr = function () {
-        $scope.searchBtn = true;
-    };
-=======
 	document.addEventListener("deviceready", function abfrage (){
 		if (localStorageService.get('street') && localStorageService.get('hnr')) {
 			$scope.query.street = localStorageService.get('street');
@@ -246,8 +217,8 @@ var application = angular.module('app.controllers', [])
 		} else {
 			$scope.searchBtn = false;
 		}
-    }
->>>>>>> origin/master
+    };
+
 
     $scope.open = function () {
 
