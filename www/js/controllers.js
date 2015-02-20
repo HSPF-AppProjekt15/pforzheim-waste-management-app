@@ -213,13 +213,19 @@ var application = angular.module('app.controllers', [])
 			}
 		});
     };
+        
 
-	function getDatesForType(type) {
-		console.log("getDatesForType: "+type);
-		DB.getDatesForType(type,$scope.query.street,$scope.query.hnr).then(function (res) {
-			return res;
-		});
-	};
+
+        function getDatesForType(type) {
+            console.log("getDatesForType: "+type);
+            var q = $q.defer();
+            DB.getDatesForType(type,$scope.query.street,$scope.query.hnr).then(function (res) {
+                q.resolve(res);
+            });
+
+            return q.promise;
+        }
+
 
 
 	//document.addEventListener("deviceready", function abfrage (){
