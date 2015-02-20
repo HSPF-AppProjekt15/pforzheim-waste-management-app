@@ -18,6 +18,9 @@
         },
         "org.apache.cordova.geolocation": {
             "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
+        },
+        "it.mobimentum.phonegapspinnerplugin": {
+            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
         }
     },
     "dependent_plugins": {}

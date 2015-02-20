@@ -173,7 +173,9 @@ var application = angular.module('app.controllers', [])
 
         console.log("getStreetFromLocation");
 
-		spinnerplugin.show();
+        if(window.spinnerplugin) {
+            spinnerplugin.show();
+        }
 
         GeoLocation.getStreetName().then(function (address) {
             if (address.street == "") {
