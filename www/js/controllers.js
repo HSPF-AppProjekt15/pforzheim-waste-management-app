@@ -214,7 +214,7 @@ var application = angular.module('app.controllers', [])
     };
 
         function getDatesForType(type) {
-            console.log("getDatesForType");
+            console.log("getDatesForType: "+type);
             DB.getDatesForType(type,$scope.query.street,$scope.query.hnr).then(function (res) {
                 return res;
             });
