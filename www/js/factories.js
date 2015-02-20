@@ -120,6 +120,26 @@ var pfAppF = angular.module('app.factories', []);
             return q.promise;
         };
 
+        var getDatesForType = function (type,street,hnr) {
+            var query="SELECT collection_date FROM collection_dates WHERE waste_type= ? AND (SELECT street_id FROM streets WHERE street_name= ? ) AND house_number = ? AND collection_date > date('now','localtime') ORDER BY collection_dates.collection_date",
+                q = $q.defer(),
+                dates=[];
+            console.log("DB.getDatesForType called: "+type);
+            selectFromTable_(query, [type,street,hnr]).then(function (res) {
+                if (res.rows.length > 0) {
+                    for (var i = 0; i<res.rows.length; i++) {
+                        dates.push(res.rows.item(i).collection_date);
+                    }
+                    console.log("DB.getDatesForType resolve: " + dates);
+                    q.resolve(dates);
+                } else {
+                    q.reject();
+                }
+            });
+            return q.promise;
+
+        };
+
         var isStreetInDB = function(street) {
             // erst schauen, ob Straße genau so in DB ist
             var query = "SELECT street_name FROM streets WHERE street_name = ?",
@@ -182,7 +202,8 @@ var pfAppF = angular.module('app.factories', []);
             getStreets: getStreets,
             loadDatesForCurrentStreet: loadDatesForCurrentStreet,
             putDatesIntoDatabase: putDatesIntoDatabase,
-            isStreetInDB: isStreetInDB
+            isStreetInDB: isStreetInDB,
+            getDatesForType: getDatesForType
         }
     });
     pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {

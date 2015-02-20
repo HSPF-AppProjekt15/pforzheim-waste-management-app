@@ -213,15 +213,21 @@ var application = angular.module('app.controllers', [])
 		});
     };
 
+        function getDatesForType(type) {
+            console.log("getDatesForType");
+            DB.getDatesForType(type,$scope.query.street,$scope.query.hnr).then(function (res) {
+                return res;
+            });
+        }
 
-	document.addEventListener("deviceready", function abfrage (){
+
+	//document.addEventListener("deviceready", function abfrage (){
 		if (localStorageService.get('street') && localStorageService.get('hnr')) {
 			$scope.query.street = localStorageService.get('street');
 			$scope.query.hnr = parseInt(localStorageService.get('hnr'));
 			loadDatesForCurrentStreet();
 		}
-	},
-	false);
+	//},	false);
 
     $scope.updateSearchBtn = function () {
 		if($scope.query.street != "" && $scope.query.hnr > 0){
