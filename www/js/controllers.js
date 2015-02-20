@@ -214,19 +214,15 @@ var application = angular.module('app.controllers', [])
 		});
     };
         
+	function getDatesForType(type) {
+		console.log("getDatesForType: "+type);
+		var q = $q.defer();
+		DB.getDatesForType(type,$scope.query.street,$scope.query.hnr).then(function (res) {
+			q.resolve(res);
+		});
 
-
-        function getDatesForType(type) {
-            console.log("getDatesForType: "+type);
-            var q = $q.defer();
-            DB.getDatesForType(type,$scope.query.street,$scope.query.hnr).then(function (res) {
-                q.resolve(res);
-            });
-
-            return q.promise;
-        }
-
-
+		return q.promise;
+	}
 
 	//document.addEventListener("deviceready", function abfrage (){
 		if (localStorageService.get('street') && localStorageService.get('hnr')) {
@@ -273,23 +269,23 @@ var application = angular.module('app.controllers', [])
 			var dates;
 			getDatesForType('Bio').then(function (res) {
 				dates = res;
+				console.log(dates);
+				for(var i = 0; i < dates.length; i++) {
+					var msecPerDay = 24 * 60 * 60 * 1000,
+					    date = dates[i]+ "T17:00:00",
+						today = new Date(date),
+						yesterday = new Date(today.getTime() - msecPerDay);
+					
+					$cordovaLocalNotification.add({
+						id: 'some_notification_id'
+						date:       yesterday,    // This expects a date object
+						message:    'Biotonne für morgen raus stellen',  // The message that is displayed
+						title:      'Biotonne',  // The title of the message
+					}).then(function () {
+						console.log('callback for adding background notification');
+					});
+				}
 			});
-			
-			console.log(dates);
-			return;
-
-			
-			setTimeout(function(){ console.log(dates); }, 1000);
-			
-			for(int i = 0; i < dates.length; i++) {
-				$cordovaLocalNotification.add({
-					id: 'some_notification_id'
-					// parameter documentation:
-					// https://github.com/katzer/cordova-plugin-local-notifications#further-informations-1
-				}).then(function () {
-					console.log('callback for adding background notification');
-				});
-			}
 		}
     }, true);
 
