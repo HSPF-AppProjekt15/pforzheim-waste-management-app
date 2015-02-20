@@ -229,15 +229,25 @@ var application = angular.module('app.controllers', [])
 		});
 
 		return q.promise;
-	}
+	};
 
-	document.addEventListener("deviceready", function abfrage (){
+	
+	
+	function loadApp() {
 		if (localStorageService.get('street') && localStorageService.get('hnr')) {
 			$scope.query.street = localStorageService.get('street');
 			$scope.query.hnr = parseInt(localStorageService.get('hnr'));
 			loadDatesForCurrentStreet();
 		}
-	},	false);
+	};
+	
+	 if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
+		document.addEventListener("deviceready", function abfrage (){
+			loadApp();
+		},	false);
+	 } else {
+		 loadApp();
+	 }
 
     $scope.updateSearchBtn = function () {
 		if($scope.query.street != "" && $scope.query.hnr > 0){
