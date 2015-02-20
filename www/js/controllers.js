@@ -25,12 +25,19 @@ var application = angular.module('app.controllers', [])
     $scope.pushPapier = typeof localStorageService.get("Papier") !== 'object' ? localStorageService.get("Papier") : 0;
     $scope.pushRM = typeof localStorageService.get("RM") !== 'object' ? localStorageService.get("RM") :0;
     $scope.pushRM14 = typeof localStorageService.get("RM14") !== 'object' ? localStorageService.get("RM14") : 0;
+	
+	
 
     // TODO: zuerst interne DB abfragen, bevor Servlet abgefragt wird
     $scope.getDates = function () {
 		if(window.spinnerplugin) {
 			spinnerplugin.show();
 		}
+		$scope.pushBio = 0;
+		$scope.pushGelb = 0;
+		$scope.pushPapier = 0;
+		$scope.pushRM = 0;
+		$scope.pushRM14 = 0;
         $scope.showDates = false;
         var dates = [];
         console.log("getDates Sende Straße und Hausnummer: "+ $scope.query.street+" "+$scope.query.hnr);
@@ -224,13 +231,13 @@ var application = angular.module('app.controllers', [])
 		return q.promise;
 	}
 
-	//document.addEventListener("deviceready", function abfrage (){
+	document.addEventListener("deviceready", function abfrage (){
 		if (localStorageService.get('street') && localStorageService.get('hnr')) {
 			$scope.query.street = localStorageService.get('street');
 			$scope.query.hnr = parseInt(localStorageService.get('hnr'));
 			loadDatesForCurrentStreet();
 		}
-	//},	false);
+	},	false);
 
     $scope.updateSearchBtn = function () {
 		if($scope.query.street != "" && $scope.query.hnr > 0){
