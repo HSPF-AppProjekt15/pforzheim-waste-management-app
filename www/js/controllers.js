@@ -3,7 +3,7 @@ const googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
 var application = angular.module('app.controllers', [])
 
-.controller("AppCtrl", function AppCtrl($scope, $http, GeoLocation, DB, $modal, localStorageService,$q) {
+.controller("AppCtrl", function AppCtrl($scope, $http, GeoLocation, DB, $modal, localStorageService,$q, $cordovaLocalNotification) {
     $scope.query = {
         "street": "",
         "hnr": ""
@@ -101,7 +101,7 @@ var application = angular.module('app.controllers', [])
         console.log("function saveStreetChoice");
         localStorageService.set('street', $scope.query.street);
         localStorageService.set('hnr', $scope.query.hnr);
-    }
+    };
 
     function loadDatesForCurrentStreet() {
 		if(window.spinnerplugin) {
@@ -148,29 +148,30 @@ var application = angular.module('app.controllers', [])
         }, function (err) {
             console.error(err)
         })
-    }
-        function searchForStreetName(address, count ) {
-            console.log("searchForStreetName", address,count);
-            count = count || 0;
-            var street = address.street,
-                def = $q.defer();
-            DB.isStreetInDB(street).then(function (res_street) {
-                def.resolve({street:res_street,number:address.number});
-            }, function () {
-                // Maximal 4 Durchgänge
-                if(count<4) {
+    };
+	
+	function searchForStreetName(address, count ) {
+		console.log("searchForStreetName", address,count);
+		count = count || 0;
+		var street = address.street,
+			def = $q.defer();
+		DB.isStreetInDB(street).then(function (res_street) {
+			def.resolve({street:res_street,number:address.number});
+		}, function () {
+			// Maximal 4 Durchgänge
+			if(count<4) {
 
-                    searchForStreetName({street: street.substring(0, street.length - 1), number: address.number},++count).then(function (result) {
-                        def.resolve(result);
-                    }, function (street) {
-                        def.reject(street);
-                    });
-                } else {
-                    def.reject(street);
-                }
-            });
-            return def.promise;
-        }
+				searchForStreetName({street: street.substring(0, street.length - 1), number: address.number},++count).then(function (result) {
+					def.resolve(result);
+				}, function (street) {
+					def.reject(street);
+				});
+			} else {
+				def.reject(street);
+			}
+		});
+		return def.promise;
+	};
 
 
     $scope.getStreetFromLocation = function () {
@@ -213,12 +214,12 @@ var application = angular.module('app.controllers', [])
 		});
     };
 
-        function getDatesForType(type) {
-            console.log("getDatesForType: "+type);
-            DB.getDatesForType(type,$scope.query.street,$scope.query.hnr).then(function (res) {
-                return res;
-            });
-        }
+	function getDatesForType(type) {
+		console.log("getDatesForType: "+type);
+		DB.getDatesForType(type,$scope.query.street,$scope.query.hnr).then(function (res) {
+			return res;
+		});
+	};
 
 
 	//document.addEventListener("deviceready", function abfrage (){
@@ -239,7 +240,6 @@ var application = angular.module('app.controllers', [])
 
 
     $scope.open = function () {
-
         var modalInstance = $modal.open({
             templateUrl: 'myModalContent.html',
             controller: 'ModalInstanceCtrl',
@@ -262,6 +262,29 @@ var application = angular.module('app.controllers', [])
             return;
         }
         // To do: register next push
+		console.log("newValue: " + newValue);
+		if(newValue === 1) {
+			var dates;
+			getDatesForType('Bio').then(function (res) {
+				dates = res;
+			});
+			
+			console.log(dates);
+			return;
+
+			
+			setTimeout(function(){ console.log(dates); }, 1000);
+			
+			for(int i = 0; i < dates.length; i++) {
+				$cordovaLocalNotification.add({
+					id: 'some_notification_id'
+					// parameter documentation:
+					// https://github.com/katzer/cordova-plugin-local-notifications#further-informations-1
+				}).then(function () {
+					console.log('callback for adding background notification');
+				});
+			}
+		}
     }, true);
 
     $scope.$watch('pushGelb', function (newValue, oldValue) {
