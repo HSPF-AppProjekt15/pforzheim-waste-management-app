@@ -310,11 +310,15 @@ var application = angular.module('app.controllers', [])
 				}
 			});
 		} else {
-			for(var i = 1000; i < 1400; i++) {
-				$cordovaLocalNotification.cancel(i).then(function () {
-				  console.log('callback for cancellation background notification');
-				});
-			}
+			$cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
+			  for(var i = 0; i < scheduledIds; i++) {
+				  if(scheduledIds[i] >= 1000 && scheduledIds[i] < 2000) {
+					  $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
+						  console.log('callback for cancellation background notification');
+						});
+				  }
+			  }
+			});
 		}
     }, true);
 
@@ -349,11 +353,15 @@ var application = angular.module('app.controllers', [])
 				}
 			});
 		} else {
-			for(var i = 2000; i < 2400; i++) {
-				$cordovaLocalNotification.cancel(i).then(function () {
-				  console.log('callback for cancellation background notification');
-				});
-			}
+			$cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
+			  for(var i = 0; i < scheduledIds; i++) {
+				  if(scheduledIds[i] >= 2000 && scheduledIds[i] < 3000) {
+					  $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
+						  console.log('callback for cancellation background notification');
+						});
+				  }
+			  }
+			});
 		}
     }, true);
 
@@ -388,11 +396,15 @@ var application = angular.module('app.controllers', [])
 				}
 			});
 		} else {
-			for(var i = 3000; i < 3400; i++) {
-				$cordovaLocalNotification.cancel(i).then(function () {
-				  console.log('callback for cancellation background notification');
-				});
-			}
+			$cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
+			  for(var i = 0; i < scheduledIds; i++) {
+				  if(scheduledIds[i] >= 3000 && scheduledIds[i] < 4000) {
+					  $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
+						  console.log('callback for cancellation background notification');
+						});
+				  }
+			  }
+			});			
 		}
     }, true);
 
@@ -427,11 +439,16 @@ var application = angular.module('app.controllers', [])
 				}
 			});
 		} else {
-			for(var i = 4000; i < 4400; i++) {
-				$cordovaLocalNotification.cancel(i).then(function () {
-				  console.log('callback for cancellation background notification');
-				});
-			}
+			$cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
+			  console.log(scheduledIds);
+			  for(var i = 0; i < scheduledIds; i++) {
+				  if(scheduledIds[i] >= 4000 && scheduledIds[i] < 5000) {
+					  $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
+						  console.log('callback for cancellation background notification');
+						});
+				  }
+			  }
+			});
 		}
     }, true);
 
@@ -466,11 +483,16 @@ var application = angular.module('app.controllers', [])
 				}
 			});
 		} else {
-			for(var i = 5000; i < 5400; i++) {
-				$cordovaLocalNotification.cancel(i).then(function () {
-				  console.log('callback for cancellation background notification');
-				});
-			}
+			$cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
+			  console.log(scheduledIds);
+			  for(var i = 0; i < scheduledIds; i++) {
+				  if(scheduledIds[i] >= 5000 && scheduledIds[i] < 6000) {
+					  $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
+						  console.log('callback for cancellation background notification');
+						});
+				  }
+			  }
+			});
 		}
     }, true);
 });
