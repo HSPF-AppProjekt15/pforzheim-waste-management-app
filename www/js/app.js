@@ -5,26 +5,26 @@
 // the 2nd parameter is an array of 'requires'
 angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalStorageModule', 'app.controllers', 'app.factories'])
 
-.config(function (localStorageServiceProvider) {
-    localStorageServiceProvider.setPrefix('pforzheimAbfallApp');
-})
+    .config(function (localStorageServiceProvider) {
+        localStorageServiceProvider.setPrefix('pforzheimAbfallApp');
+    })
 
-.run(function (DB) {
+    .run(function (DB) {
         if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
             document.addEventListener("deviceready", onDeviceReady, false);
         } else {
             onDeviceReady();
         }
-    //document.addEventListener("deviceready", function () {
+        //document.addEventListener("deviceready", function () {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
         /*if(window.cordova && window.cordova.plugins.Keyboard) {
-      cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-    }
-    if(window.StatusBar) {
-      StatusBar.styleDefault();
-    }
-*/
+         cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+         }
+         if(window.StatusBar) {
+         StatusBar.styleDefault();
+         }
+         */
         function onDeviceReady() {
             DB.initDB().then(function () {
                 console.log("initDB promise resolved");
@@ -33,5 +33,5 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
             });
         };
 
-    //}, false);
-});
+        //}, false);
+    });

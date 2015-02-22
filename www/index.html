@@ -19,7 +19,7 @@
     <script type="text/javascript" src="cordova.js"></script>
     <!--<script type="text/javascript" src="lib/ui-bootstrap-tpls-0.12.0.min.js"></script>-->
     <script type="text/javascript" src="lib/mobile-angular-ui/js/mobile-angular-ui.core.min.js"></script>
-   <!-- <script type="text/javascript" src="lib/mobile-angular-ui/js/mobile-angular-ui.gestures.js"></script>-->
+    <!-- <script type="text/javascript" src="lib/mobile-angular-ui/js/mobile-angular-ui.gestures.js"></script>-->
     <script type="text/javascript" src="lib/mobile-angular-ui/js/mobile-angular-ui.min.js"></script>
     <script type="text/javascript" src="lib/angular-local-storage.min.js"></script>
 
@@ -61,34 +61,34 @@
                                 Bitte Straße angeben, um den Abfall-Abfuhrkalender anzuzeigen.
                             </div>
                             <div class="panel-footer">
-                                 <div class="row">
+                                <div class="row">
 
-                                     <div class="form-group col-xs-9">
-                                         <input type="text" class="form-control" placeholder="Straßenname"
-                                                ng-model="query.street" ng-keydown="checkKeyDown($event)"
-                                                ng-change="getStreets(query.street, query.hnr)"
-                                                typeahead="street for street in streetSuggestions | filter:$viewValue | limitTo:5"
-                                                typeahead-wait-ms="150" typeahead-focus-first="false"
-                                                id="searchInputStrasse"/>
-                                     </div>
-                                     <div class="form-group col-xs-3">
-                                         <input type="number" class="form-control" placeholder="Nr" ng-model="query.hnr"
-                                                id="searchInputHnr" ng-change="updateSearchBtn()"/>
+                                    <div class="form-group col-xs-9">
+                                        <input type="text" class="form-control" placeholder="Straßenname"
+                                               ng-model="query.street" ng-keydown="checkKeyDown($event)"
+                                               ng-change="getStreets(query.street, query.hnr)"
+                                               typeahead="street for street in streetSuggestions | filter:$viewValue | limitTo:5"
+                                               typeahead-wait-ms="150" typeahead-focus-first="false"
+                                               id="searchInputStrasse"/>
+                                    </div>
+                                    <div class="form-group col-xs-3">
+                                        <input type="number" class="form-control" placeholder="Nr" ng-model="query.hnr"
+                                               id="searchInputHnr" ng-change="updateSearchBtn()"/>
 
-                                     </div>
+                                    </div>
 
 
-                                     <div class="col-xs-7">
-                                         <button class="btn btn-primary " ng-click="getStreetFromLocation();">
-                                             Standort lokalisieren
-                                         </button>
-                                     </div>
-                                     <div class="col-xs-5">
-                                         <button class="btn btn-default pull-right" ng-click="getDates()"
-                                                 ng-show="searchBtn">
-                                             Suche starten
-                                         </button>
-                                     </div>
+                                    <div class="col-xs-7">
+                                        <button class="btn btn-primary " ng-click="getStreetFromLocation();">
+                                            Standort lokalisieren
+                                        </button>
+                                    </div>
+                                    <div class="col-xs-5">
+                                        <button class="btn btn-default pull-right" ng-click="getDates()"
+                                                ng-show="searchBtn">
+                                            Suche starten
+                                        </button>
+                                    </div>
                                 </div>
 
                             </div>
