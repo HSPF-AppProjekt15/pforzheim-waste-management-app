@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, target-densitydpi=device-dpi" />
+    <title>Pforzheim Abfall-Abfuhrkalender</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+	
+    <script type="text/javascript" src="lib/angular.min.js"></script>
+    <script type="text/javascript" src="lib/ngCordova/dist/ng-cordova.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+	<script type="text/javascript" src="lib/ui-bootstrap-tpls-0.12.0.min.js"></script>
+    <script type="text/javascript" src="lib/angular-local-storage.min.js"></script>
+	
+    <!-- controller -->
+    <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/controllers.js"></script>
+    <script type="text/javascript" src="js/factories.js"></script>
+</head>
+
+<body ng-app="starter" id="extraPaddingToShowAllContent">
+
+    <!--    Header  -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+
+                <img class="navbar-brand" alt="Brand" src="img/Wappen_Pforzheim.png">
+                <h3 class="navbar-text">Pforzheim Abfuhrkalender</h3>
+            </div>
+        </div>
+    </nav>
+    <div ng-controller="AppCtrl" ng-init="updateHnr(query.street, query.hnr)">
+        <div class="container-fluid">
+            <!--        Eingabefelder-->
+            <div class="panel panel-default noMargin">
+                <div class="panel-body">
+                    Bitte Straße angeben, um den Abfall-Abfuhrkalender anzuzeigen.
+                </div>
+                <div class="panel-footer">
+                    <div class="row">
+
+                        <div class="form-group col-xs-9">
+                            <input type="text" class="form-control" placeholder="Straßenname" ng-model="query.street" ng-keydown="checkKeyDown($event)" ng-change="getStreets(query.street, query.hnr)" typeahead="street for street in streetSuggestions | filter:$viewValue | limitTo:5" typeahead-wait-ms="150" typeahead-focus-first="false" id="searchInputStrasse" />
+                        </div>
+                        <div class="form-group col-xs-3">
+                            <input type="number" class="form-control" placeholder="Nr" ng-model="query.hnr" id="searchInputHnr" ng-change="updateSearchBtn()" />
+
+                        </div>
+
+
+                    <div class="col-xs-7"><button class="btn btn-primary " ng-click="getStreetFromLocation();">
+                        Standort lokalisieren
+                    </button></div>
+                    <div class="col-xs-5"><button class="btn btn-default pull-right" ng-click="getDates()" ng-show="searchBtn">
+                        Suche starten
+                    </button></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row" ng-show="showDates">
+                <div class="col-xs-10 col-xs-offset-1">
+                    <h3>Nächste Leerungen</h3>
+                    <table class="table table-striped">
+                        <tr ng-repeat="date in dates">
+                            <td class="vert-align">{{ date.collection_date }}</td>
+                            <td class="vert-align"><i class="icon icon-waste icon-{{ type }}" ng-repeat="type in date.waste_type"></i>
+                            </td>
+                        </tr>
+                    </table>
+                    <button class="btn btn-primary btn-xs col-xs-6 col-xs-offset-3" ng-click="open()">Legende</button>
+                </div>
+            </div>
+
+
+            <div class="panel panel-default" style="margin-top: 2rem;" ng-show="showDates">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            Schalten Sie die Benachrichtigungen ein, um am Vorabend an eine Leerung erinnert zu werden.
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-5 col-xs-offset-1">
+                            Push-Benachrichtigung
+                        </div>
+                        <div class="col-xs-5">
+                            <div class="btn-group pull-right">
+                                <label class="btn btn-primary" ng-model="notifications" btn-radio="0">Aus</label>
+                                <label class="btn btn-primary" ng-model="notifications" btn-radio="1">An</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+
+                    <div ng-show="notifications">
+                        <h4>Benachrichtigungen</h4>
+                        <table class="table">
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-Bio"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Biotonne
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-primary" ng-model="pushBio" btn-radio="0">Aus</label>
+                                        <label class="btn btn-primary" ng-model="pushBio" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-Gelb"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Gelbe Tonne
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-primary" ng-model="pushGelb" btn-radio="0">Aus</label>
+                                        <label class="btn btn-primary" ng-model="pushGelb" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-Papier"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Papiertonne
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-primary" ng-model="pushPapier" btn-radio="0">Aus</label>
+                                        <label class="btn btn-primary" ng-model="pushPapier" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-RM"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Restmüll 7-tägig
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-primary" ng-model="pushRM" btn-radio="0">Aus</label>
+                                        <label class="btn btn-primary" ng-model="pushRM" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="vert-align iconColumn noBorder">
+                                    <i class="icon icon-waste icon-RM14"></i>
+                                </td>
+                                <td class="vert-align noBorder">
+                                    Restmüll 14-tägig
+                                </td>
+                                <td class="vert-align noBorder">
+                                    <div class="btn-group pull-right">
+                                        <label class="btn btn-primary" ng-model="pushRM14" btn-radio="0">Aus</label>
+                                        <label class="btn btn-primary" ng-model="pushRM14" btn-radio="1">An</label>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+
+                        <!--<ul class="list">
+
+                            <li class="item item-toggle item-icon-left">
+                                <i class="icon icon-waste icon-Bio"></i>Biotonne
+                                <label class="toggle toggle-balanced">
+                                    <input type="checkbox" ng-model="pushBio">
+                                    <div class="track">
+                                        <div class="handle"></div>
+                                    </div>
+                                </label>
+                            </li>
+                            <li class="item item-toggle item-icon-left">
+                                <i class="icon icon-waste icon-Gelb"></i>Gelbe Tonne
+                                <label class="toggle toggle-balanced">
+                                    <input type="checkbox" ng-model="pushGelb">
+                                    <div class="track">
+                                        <div class="handle"></div>
+                                    </div>
+                                </label>
+                            </li>
+                            <li class="item item-toggle item-icon-left">
+                                <i class="icon icon-waste icon-Papier"></i>Papiertonne
+                                <label class="toggle toggle-balanced">
+                                    <input type="checkbox" ng-model="pushPapier">
+                                    <div class="track">
+                                        <div class="handle"></div>
+                                    </div>
+                                </label>
+                            </li>
+                            <li class="item item-toggle item-icon-left">
+                                <i class="icon icon-waste icon-RM"></i>Restmüll 7-tägig
+                                <label class="toggle toggle-balanced">
+                                    <input type="checkbox" ng-model="pushRM">
+                                    <div class="track">
+                                        <div class="handle"></div>
+                                    </div>
+                                </label>
+                            </li>
+                            <li class="item item-toggle item-icon-left">
+                                <i class="icon icon-waste icon-RM14"></i>Restmüll 14-tägig
+                                <label class="toggle toggle-balanced">
+                                    <input type="checkbox" ng-model="pushRM14">
+                                    <div class="track">
+                                        <div class="handle"></div>
+                                    </div>
+                                </label>
+                            </li>
+                        </ul>-->
+                    </div>
+                </div>
+            </div>
+
+            <script type="text/ng-template" id="myModalContent.html">
+                <div class="modal-header">
+                    <h3 class="modal-title">Legende</h3>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped">
+                        <tr>
+                            <td><i class="icon icon-waste icon-Bio"></i>
+                            </td>
+                            <td>
+                                <h4>Biotonne</h4>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><i class="icon icon-waste icon-Gelb"></i>
+                            </td>
+                            <td>
+                                <h4>Gelbe Tonne</h4>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><i class="icon icon-waste icon-Papier"></i>
+                            </td>
+                            <td>
+                                <h4>Papiertonne</h4>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><i class="icon icon-waste icon-RM"></i>
+                            </td>
+                            <td>
+                                <h4>Restmüll 7-tägig</h4>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><i class="icon icon-waste icon-RM14"></i>
+                            </td>
+                            <td>
+                                <h4>Restmüll 14-tägig</h4>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" ng-click="ok()">OK</button>
+                </div>
+            </script>
+        </div>
+    </div>
+
+    <!-- angularjs cordova bootstrap -->
+
+    
+	
+
+</body>
+
+</html>

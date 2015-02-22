@@ -35,6 +35,18 @@
     position: absolute;
 }
 
+#extraPaddingToShowAllContent {
+    padding-top: 6rem;
+}
+
+.noMargin {
+    margin-bottom: 0px;
+}
+
+.noPadding {
+    padding: 0;
+}
+
 .panel {
     border: none;
     border-radius: 0;
@@ -42,18 +54,14 @@
     box-shadow: none;
 }
 
-.table tbody > tr > td.vert-align {
+.table tbody>tr>td.vert-align {
     vertical-align: middle;
 }
 
-.table tbody > tr > td.iconColumn {
+.table tbody>tr>td.iconColumn {
     width: 40px;
 }
 
-.table tbody > tr > td.noBorder {
+.table tbody>tr>td.noBorder {
     border-top: none;
-}
-
-.form-group {
-    padding: 10px 15px;
 }

@@ -3,7 +3,7 @@ const googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
 var application = angular.module('app.controllers', [])
 
-.controller("AppCtrl", function AppCtrl($scope, $http, GeoLocation, DB, localStorageService,$q, $cordovaLocalNotification) {
+.controller("AppCtrl", function AppCtrl($scope, $http, GeoLocation, DB, $modal, localStorageService,$q, $cordovaLocalNotification) {
     $scope.query = {
         "street": "",
         "hnr": ""
@@ -19,12 +19,12 @@ var application = angular.module('app.controllers', [])
     $scope.streetSuggestions = [];
     $scope.searchBtn = false;
 
-    $scope.notifications = typeof localStorageService.get("notifications") !== 'object' ? localStorageService.get("notifications") : false;
-    $scope.pushBio = typeof localStorageService.get("Bio") !== 'object' ? localStorageService.get("Bio") : false;
-    $scope.pushGelb = typeof localStorageService.get("Gelb") !== 'object' ? localStorageService.get("Gelb") : false;
-    $scope.pushPapier = typeof localStorageService.get("Papier") !== 'object' ? localStorageService.get("Papier") : false;
-    $scope.pushRM = typeof localStorageService.get("RM") !== 'object' ? localStorageService.get("RM") : false;
-    $scope.pushRM14 = typeof localStorageService.get("RM14") !== 'object' ? localStorageService.get("RM14") : false;
+    $scope.notifications = typeof localStorageService.get("notifications") !== 'object' ? localStorageService.get("notifications") : 0;
+    $scope.pushBio = typeof localStorageService.get("Bio") !== 'object' ? localStorageService.get("Bio") : 0;
+    $scope.pushGelb = typeof localStorageService.get("Gelb") !== 'object' ? localStorageService.get("Gelb") : 0;
+    $scope.pushPapier = typeof localStorageService.get("Papier") !== 'object' ? localStorageService.get("Papier") : 0;
+    $scope.pushRM = typeof localStorageService.get("RM") !== 'object' ? localStorageService.get("RM") :0;
+    $scope.pushRM14 = typeof localStorageService.get("RM14") !== 'object' ? localStorageService.get("RM14") : 0;
 	
 	
 
@@ -33,11 +33,11 @@ var application = angular.module('app.controllers', [])
 		if(window.spinnerplugin) {
 			spinnerplugin.show();
 		}
-		$scope.pushBio = false;
-		$scope.pushGelb = false;
-		$scope.pushPapier = false;
-		$scope.pushRM = false;
-		$scope.pushRM14 = false;
+		$scope.pushBio = 0;
+		$scope.pushGelb = 0;
+		$scope.pushPapier = 0;
+		$scope.pushRM = 0;
+		$scope.pushRM14 = 0;
         $scope.showDates = false;
         var dates = [];
         console.log("getDates Sende Straße und Hausnummer: "+ $scope.query.street+" "+$scope.query.hnr);
@@ -89,7 +89,7 @@ var application = angular.module('app.controllers', [])
 
     $scope.getStreets = function (street, hnr) {
         console.log("function getStreets: "+ street);
-        $scope.updateSearchBtn();
+
         $scope.streetSuggestions = [];
 
 			if (street.length > 0) {
@@ -258,14 +258,14 @@ var application = angular.module('app.controllers', [])
     };
 
 
-/*    $scope.open = function () {
+    $scope.open = function () {
         var modalInstance = $modal.open({
             templateUrl: 'myModalContent.html',
             controller: 'ModalInstanceCtrl',
             size: 'sm',
             resolve: {}
         });
-    };*/
+    };
 
     $scope.$watch('notifications', function (newValue, oldValue) {
         // Check if value has changes
@@ -274,18 +274,18 @@ var application = angular.module('app.controllers', [])
         }
         // To do: register next push
 		localStorageService.set("notifications", newValue);
-		if(newValue === true) {
-			$scope.pushBio = true;
-			$scope.pushGelb = true;
-			$scope.pushPapier = true;
-			$scope.pushRM = true;
-			$scope.pushRM14 = true;
+		if(newValue === 1) {
+			$scope.pushBio = 1;
+			$scope.pushGelb = 1;
+			$scope.pushPapier = 1;
+			$scope.pushRM = 1;
+			$scope.pushRM14 = 1;
 		} else {
-			$scope.pushBio = false;
-			$scope.pushGelb = false;
-			$scope.pushPapier = false;
-			$scope.pushRM = false;
-			$scope.pushRM14 = false;
+			$scope.pushBio = 0;
+			$scope.pushGelb = 0;
+			$scope.pushPapier = 0;
+			$scope.pushRM = 0;
+			$scope.pushRM14 = 0;
 		}
     }, true);
 
@@ -296,7 +296,7 @@ var application = angular.module('app.controllers', [])
         }
         // To do: register next push
 		localStorageService.set("Bio", newValue);
-		if(newValue === true) {
+		if(newValue === 1) {
 			var dates;
 			getDatesForType('Bio').then(function (res) {
 				dates = res;
@@ -312,7 +312,7 @@ var application = angular.module('app.controllers', [])
 						id: bioIds,
 						date:       yesterday,
 						message:    'Morgen ist Biomüll',
-						title:      'Biotonne'
+						title:      'Biotonne',
 					}).then(function () {
 						console.log('callback for adding background notification');
 					});
@@ -339,7 +339,7 @@ var application = angular.module('app.controllers', [])
         }
         // To do: register next push
 		localStorageService.set("Gelb", newValue);
-		if(newValue === true) {
+		if(newValue === 1) {
 			var dates;
 			getDatesForType('Gelb').then(function (res) {
 				dates = res;
@@ -355,7 +355,7 @@ var application = angular.module('app.controllers', [])
 						id: gelbIds,
 						date:       yesterday,
 						message:    'Morgen ist Gelbe Tonne',
-						title:      'Gelbe Tonne'
+						title:      'Gelbe Tonne',
 					}).then(function () {
 						console.log('callback for adding background notification');
 					});
@@ -382,7 +382,7 @@ var application = angular.module('app.controllers', [])
         }
         // To do: register next push
 		localStorageService.set("Papier", newValue);
-		if(newValue === true) {
+		if(newValue === 1) {
 			var dates;
 			getDatesForType('Papier').then(function (res) {
 				dates = res;
@@ -398,7 +398,7 @@ var application = angular.module('app.controllers', [])
 						id: papierIds,
 						date:       yesterday,
 						message:    'Morgen ist Papiermüll',
-						title:      'Papier Tonne'
+						title:      'Papier Tonne',
 					}).then(function () {
 						console.log('callback for adding background notification');
 					});
@@ -425,7 +425,7 @@ var application = angular.module('app.controllers', [])
         }
         // To do: register next push
 		localStorageService.set("RM", newValue);
-		if(newValue === true) {
+		if(newValue === 1) {
 			var dates;
 			getDatesForType('RM').then(function (res) {
 				dates = res;
@@ -441,7 +441,7 @@ var application = angular.module('app.controllers', [])
 						id: rmIds,
 						date:       yesterday,
 						message:    'Morgen ist 7 tägiger Restmüll',
-						title:      'Restmüll 7 tägig'
+						title:      'Restmüll 7 tägig',
 					}).then(function () {
 						console.log('callback for adding background notification');
 					});
@@ -469,7 +469,7 @@ var application = angular.module('app.controllers', [])
         }
         // To do: register next push
 		localStorageService.set("RM14", newValue);
-		if(newValue === true) {
+		if(newValue === 1) {
 			var dates;
 			getDatesForType('Gelb').then(function (res) {
 				dates = res;
@@ -485,7 +485,7 @@ var application = angular.module('app.controllers', [])
 						id: rm14Ids,
 						date:       yesterday,
 						message:    'Morgen ist 14 tägiger Restmüll',
-						title:      'Restmüll 14 tägig'
+						title:      'Restmüll 14 tägig',
 					}).then(function () {
 						console.log('callback for adding background notification');
 					});
@@ -508,9 +508,8 @@ var application = angular.module('app.controllers', [])
 });
 
 
-/*
 application.controller('ModalInstanceCtrl', function ($scope, $modalInstance) {
     $scope.ok = function () {
         $modalInstance.dismiss('cancel');
     };
-});*/
+});
