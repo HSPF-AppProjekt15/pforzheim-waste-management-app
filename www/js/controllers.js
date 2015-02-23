@@ -208,6 +208,12 @@ var application = angular.module('app.controllers', [])
                             console.log(err);
                             // TODO: wenn Straße nicht in DB ist, Error anzeigen
                             console.log("getStreetFromLocation: Straße nicht in PF gefunden: " + address.street);
+							if (window.spinnerplugin) {
+								spinnerplugin.hide();
+							}
+							if (window.spinnerplugin) {
+								window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
+							}
                         })
 
                     }
