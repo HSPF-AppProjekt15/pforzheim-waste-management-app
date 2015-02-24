@@ -201,6 +201,8 @@ var application = angular.module('app.controllers', [])
                     $scope.showSuggestions = false;
                 });
 
+            } else {
+                $scope.showSuggestions = false;
             }
         };
 
@@ -248,6 +250,12 @@ var application = angular.module('app.controllers', [])
             $scope.searchBtn = ($scope.query.street != "" && $scope.query.hnr > 0);
         };
 
+
+
+        $scope.selectStreet = function (street) {
+            $scope.query.street = street;
+            $scope.showSuggestions = false;
+        };
 
         /*    $scope.open = function () {
          var modalInstance = $modal.open({
