@@ -9,12 +9,17 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
     var openDB_ = function (dbName) {
         console.log("openDB_ called", dbName);
         var q = $q.defer();
-        if (window.sqlitePlugin !== undefined && navigator.userAgent.match(/(iPhone|iPod|iPad)/)) {
-            db_ = $cordovaSQLite.openDB(dbName + ".db", 1);
-            q.resolve(db_);
-        } else {
-            db_ = window.openDatabase(dbName + ".db", '1', dbName, 200000);
-            q.resolve(db_); // browser
+        try {
+            if (window.sqlitePlugin !== undefined) {
+                db_ = $cordovaSQLite.openDB(dbName + ".db", 1);
+                q.resolve(db_);
+            } else {
+                db_ = window.openDatabase(dbName + ".db", '1', dbName, 200000);
+                q.resolve(db_); // browser
+            }
+        }
+        catch (err) {
+            q.reject(err);
         }
         return q.promise;
     };
@@ -74,6 +79,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
                     selectFromTable_(query, []).then(function (res) {
                         if (res.rows.length > 0) {
                             console.log("Tabelle streets schon gefüllt");
+                            q.resolve();
                         } else {
                             console.log("Tabelle streets noch nicht gefüllt. Mit Daten füllen.");
                             // Aus Datei einlesen und in DB schreiben
@@ -253,4 +259,25 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
             return deferred.promise;
         }
     };
+});
+pfAppF.factory('LoadingSpinner', function () {
+    var spinner_ = window.spinnerplugin;
+    var show = function () {
+        if(isAvailable()) {
+            spinner_.show();
+        }
+    };
+    var hide = function () {
+        if(isAvailable()) {
+            spinner_.hide();
+        }
+    };
+    function isAvailable() {
+        return (typeof spinner_ !== "undefined");
+    }
+
+    return {
+        show: show,
+        hide: hide
+    }
 });

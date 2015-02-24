@@ -1,9 +1,11 @@
-const pwm_url = "http://pfwastemanagementenv-hd7anwmmbc.elasticbeanstalk.com/ServletConnectorServlet";
-const googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
+'use strict';
+
+var pwm_url = "http://pfwastemanagementenv-hd7anwmmbc.elasticbeanstalk.com/ServletConnectorServlet";
+var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
 var application = angular.module('app.controllers', [])
 
-    .controller("AppCtrl", function AppCtrl($scope, $http, GeoLocation, DB, localStorageService, $q, $cordovaLocalNotification) {
+    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB,LoadingSpinner, localStorageService, $q, $cordovaLocalNotification) {
         $scope.query = {
             "street": "",
             "hnr": ""
@@ -27,92 +29,15 @@ var application = angular.module('app.controllers', [])
         $scope.pushRM14 = typeof localStorageService.get("RM14") !== 'object' ? localStorageService.get("RM14") : false;
 
 
-        // TODO: zuerst interne DB abfragen, bevor Servlet abgefragt wird
-        $scope.getDates = function () {
-            if (window.spinnerplugin) {
-                spinnerplugin.show();
-            }
-            $scope.pushBio = false;
-            $scope.pushGelb = false;
-            $scope.pushPapier = false;
-            $scope.pushRM = false;
-            $scope.pushRM14 = false;
-            $scope.showDates = false;
-            var dates = [];
-            console.log("getDates Sende Straße und Hausnummer: " + $scope.query.street + " " + $scope.query.hnr);
-            $http.get(pwm_url + '?strasse=' + $scope.query.street + '+&hnr=' + $scope.query.hnr).
-                success(function (data, status, headers, config) {
-                    console.log("getDates Antwort erhalten:", data);
-
-
-                    // In Datenbank schreiben
-                    angular.forEach(data, function (value, key) {
-                        console.log("key", key);
-
-                        for (var i = 0; i < value.length; i++) {
-                            date = value[i].trim();
-
-                            date = date.substring(0, 10);
-                            date = date.substring(6, 10) + '-' + date.substring(3, 5) + '-' + date.substring(0, 2);
-                            console.log(key + ' ' + date);
-
-                            dates.push({
-                                "street": $scope.query.street,
-                                "hnr": $scope.query.hnr,
-                                "wtype": key,
-                                "col_date": date,
-                                "date_added": new Date()
-                            })
-                        }
-                    });
-                    DB.putDatesIntoDatabase(dates).then(function (res) {
-                        saveStreetChoice();
-                        loadDatesForCurrentStreet();
-                    }, function (err) {
-                        console.log(err);
-                    });
-
-                }).
-                error(function (data, status, headers, config) {
-                    console.log("getDates Fehler", data);
-                    $scope.showDates = false;
-                    if (window.spinnerplugin) {
-                        spinnerplugin.hide();
-                    }
-                    if (window.spinnerplugin) {
-                        window.plugins.toast.showLongTop("Es konnte keine Verbindung aufgebaut werden,\nstellen sie eine Internetverbindung her");
-                    }
-                });
-        };
-
-
-        $scope.getStreets = function (street, hnr) {
-            console.log("function getStreets: " + street);
-            $scope.updateSearchBtn();
-            $scope.streetSuggestions = [];
-
-            if (street.length > 0) {
-                DB.getStreets(street).then(function (streetSuggestions) {
-                    $scope.streetSuggestions = streetSuggestions;
-                    $scope.showSuggestions = true;
-                }, function (err) {
-                    console.log(err);
-                    $scope.showSuggestions = false;
-                });
-
-            }
-        };
-
+        // Private Methods
         function saveStreetChoice() {
             console.log("function saveStreetChoice");
             localStorageService.set('street', $scope.query.street);
             localStorageService.set('hnr', $scope.query.hnr);
-        };
+        }
 
         function loadDatesForCurrentStreet() {
-            if (window.spinnerplugin) {
-                spinnerplugin.show();
-            }
+            LoadingSpinner.show();
             console.log("function loadDatesForCurrentStreet");
             $scope.dates = [];
             DB.loadDatesForCurrentStreet($scope.query.street, $scope.query.hnr).then(function (res) {
@@ -143,18 +68,17 @@ var application = angular.module('app.controllers', [])
                     $scope.showDates = true;
                 } else {
                     $scope.showDates = false;
-                    console.log("loadDatesForCurrentStreet: no result")
+                    console.log("loadDatesForCurrentStreet: no result");
+                    LoadingSpinner.hide();
                     if (window.spinnerplugin) {
                         window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
                     }
                 }
-                if (window.spinnerplugin) {
-                    spinnerplugin.hide();
-                }
+                LoadingSpinner.hide();
             }, function (err) {
                 console.error(err)
             })
-        };
+        }
 
         function searchForStreetName(address, count) {
             console.log("searchForStreetName", address, count);
@@ -180,6 +104,100 @@ var application = angular.module('app.controllers', [])
                 }
             });
             return def.promise;
+        }
+
+        function getDatesForType(type) {
+            console.log("getDatesForType: " + type);
+            var q = $q.defer();
+            DB.getDatesForType(type, $scope.query.street, $scope.query.hnr).then(function (res) {
+                q.resolve(res);
+            });
+
+            return q.promise;
+        }
+
+        function initController() {
+            if (localStorageService.get('street') && localStorageService.get('hnr')) {
+                $scope.query.street = localStorageService.get('street');
+                $scope.query.hnr = parseInt(localStorageService.get('hnr'));
+                loadDatesForCurrentStreet();
+            }
+        }
+
+        // Public Methods
+
+        // TODO: zuerst interne DB abfragen, bevor Servlet abgefragt wird
+        $scope.getDates = function () {
+            LoadingSpinner.show();
+
+            $scope.pushBio = false;
+            $scope.pushGelb = false;
+            $scope.pushPapier = false;
+            $scope.pushRM = false;
+            $scope.pushRM14 = false;
+            $scope.showDates = false;
+            var dates = [];
+            console.log("getDates Sende Straße und Hausnummer: " + $scope.query.street + " " + $scope.query.hnr);
+            $http.get(pwm_url + '?strasse=' + $scope.query.street + '+&hnr=' + $scope.query.hnr).
+                success(function (data) {
+                    console.log("getDates Antwort erhalten:", data);
+
+
+                    // In Datenbank schreiben
+                    angular.forEach(data, function (value, key) {
+                        console.log("key", key);
+
+                        for (var i = 0; i < value.length; i++) {
+                            var date = value[i].trim();
+
+                            date = date.substring(0, 10);
+                            date = date.substring(6, 10) + '-' + date.substring(3, 5) + '-' + date.substring(0, 2);
+                            console.log(key + ' ' + date);
+
+                            dates.push({
+                                "street": $scope.query.street,
+                                "hnr": $scope.query.hnr,
+                                "wtype": key,
+                                "col_date": date,
+                                "date_added": new Date()
+                            })
+                        }
+                    });
+                    DB.putDatesIntoDatabase(dates).then(function (res) {
+                        saveStreetChoice();
+                        loadDatesForCurrentStreet();
+                    }, function (err) {
+                        console.log(err);
+                    });
+
+                }).
+                error(function (data, status, headers, config) {
+                    console.log("getDates Fehler", data);
+                    $scope.showDates = false;
+
+                    LoadingSpinner.hide();
+                    if (window.spinnerplugin) {
+                        window.plugins.toast.showLongTop("Es konnte keine Verbindung aufgebaut werden,\nstellen sie eine Internetverbindung her");
+                    }
+                });
+        };
+
+
+        $scope.getStreets = function (street, hnr) {
+            console.log("function getStreets: " + street);
+            $scope.updateSearchBtn();
+            $scope.streetSuggestions = [];
+
+            if (street.length > 0) {
+                DB.getStreets(street).then(function (streetSuggestions) {
+                    $scope.streetSuggestions = streetSuggestions;
+                    $scope.showSuggestions = true;
+                }, function (err) {
+                    console.log(err);
+                    $scope.showSuggestions = false;
+                });
+
+            }
         };
 
 
@@ -187,16 +205,12 @@ var application = angular.module('app.controllers', [])
 
             console.log("getStreetFromLocation");
 
-            if (window.spinnerplugin) {
-                spinnerplugin.show();
-            }
+            LoadingSpinner.show();
 
             GeoLocation.getStreetName().then(function (address) {
                     if (address.street == "") {
                         $scope.showDates = false;
-                        if (window.spinnerplugin) {
-                            spinnerplugin.hide();
-                        }
+                        LoadingSpinner.hide();
                     } else {
 
                         // Schauen, ob Straße in DB
@@ -208,9 +222,7 @@ var application = angular.module('app.controllers', [])
                             console.log(err);
                             // TODO: wenn Straße nicht in DB ist, Error anzeigen
                             console.log("getStreetFromLocation: Straße nicht in PF gefunden: " + address.street);
-							if (window.spinnerplugin) {
-								spinnerplugin.hide();
-							}
+							LoadingSpinner.hide();
 							if (window.spinnerplugin) {
 								window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
 							}
@@ -220,48 +232,16 @@ var application = angular.module('app.controllers', [])
                 },
                 function (err) {
                     $scope.showDates = false;
-                    if (window.spinnerplugin) {
-                        spinnerplugin.hide();
-                    }
+                    LoadingSpinner.hide();
                     if (window.spinnerplugin) {
                         window.plugins.toast.showLongTop("Es konnte kein GPS Signal gefunden werden\nMöglicherweise ist ihr GPS oder Internetverbindung deaktiviert");
                     }
                 });
         };
 
-        function getDatesForType(type) {
-            console.log("getDatesForType: " + type);
-            var q = $q.defer();
-            DB.getDatesForType(type, $scope.query.street, $scope.query.hnr).then(function (res) {
-                q.resolve(res);
-            });
-
-            return q.promise;
-        };
-
-
-        function loadApp() {
-            if (localStorageService.get('street') && localStorageService.get('hnr')) {
-                $scope.query.street = localStorageService.get('street');
-                $scope.query.hnr = parseInt(localStorageService.get('hnr'));
-                loadDatesForCurrentStreet();
-            }
-        };
-
-        if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
-            document.addEventListener("deviceready", function abfrage() {
-                loadApp();
-            }, false);
-        } else {
-            loadApp();
-        }
 
         $scope.updateSearchBtn = function () {
-            if ($scope.query.street != "" && $scope.query.hnr > 0) {
-                $scope.searchBtn = true;
-            } else {
-                $scope.searchBtn = false;
-            }
+            $scope.searchBtn = ($scope.query.street != "" && $scope.query.hnr > 0);
         };
 
 
@@ -512,6 +492,13 @@ var application = angular.module('app.controllers', [])
                 });
             }
         }, true);
+
+
+        // INIT CONTROLLER
+        $rootScope.dbReady.then(function () {
+            console.log("AppCtrl dbReady fired");
+            initController();
+        });
     });
 
 

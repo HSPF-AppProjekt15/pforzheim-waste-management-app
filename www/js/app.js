@@ -9,8 +9,13 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
         localStorageServiceProvider.setPrefix('pforzheimAbfallApp');
     })
 
-    .run(function (DB) {
-        if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
+    .run(function ($rootScope, $q,DB) {
+        var q = $q.defer();
+        $rootScope.dbReady = q.promise;
+
+        var isCordovaApp = (typeof window.cordova !== "undefined");
+        if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
+        //if(isCordovaApp) {
             document.addEventListener("deviceready", onDeviceReady, false);
         } else {
             onDeviceReady();
@@ -27,7 +32,8 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
          */
         function onDeviceReady() {
             DB.initDB().then(function () {
-                console.log("initDB promise resolved");
+                q.resolve();
+                console.log("initDB promise resolved, dbReady resolved");
             }, function (err) {
                 console.log("App.js Fehler:", err);
             });
