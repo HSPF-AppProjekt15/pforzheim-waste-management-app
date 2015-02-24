@@ -5,7 +5,7 @@ var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
 var application = angular.module('app.controllers', [])
 
-    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB,LoadingSpinner, localStorageService, $q, $cordovaLocalNotification) {
+    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB,LoadingSpinner, localStorageService, $q, $cordovaLocalNotification,$log) {
         $scope.query = {
             "street": "",
             "hnr": ""
@@ -31,14 +31,14 @@ var application = angular.module('app.controllers', [])
 
         // Private Methods
         function saveStreetChoice() {
-            console.log("function saveStreetChoice");
+            $log.log("function saveStreetChoice");
             localStorageService.set('street', $scope.query.street);
             localStorageService.set('hnr', $scope.query.hnr);
         }
 
         function loadDatesForCurrentStreet() {
             LoadingSpinner.show();
-            console.log("function loadDatesForCurrentStreet");
+            $log.log("function loadDatesForCurrentStreet");
             $scope.dates = [];
             DB.loadDatesForCurrentStreet($scope.query.street, $scope.query.hnr).then(function (res) {
                 if (res.rows.length > 0) {
@@ -47,8 +47,8 @@ var application = angular.module('app.controllers', [])
                     var loop;
                     for (var i = 0; i < res.rows.length; i++) {
                         loop = res.rows.item(i);
-                        //console.log("loop", loop);
-                        //console.log("loop_before", loop_last_change_cd);
+                        //$log.log("loop", loop);
+                        //$log.log("loop_before", loop_last_change_cd);
                         if (loop.collection_date == loop_last_change_cd) {
                             // collection_date ist gleich, waste_type wird dem zweiten property des objects dates hinzugefügt
                             $scope.dates[last_index].waste_type.push(loop.waste_type);
@@ -62,13 +62,13 @@ var application = angular.module('app.controllers', [])
                             loop_last_change_cd = loop.collection_date;
                         }
 
-                        //console.log('{"' + res.rows.item(i).waste_type + '":"' + res.rows.item(i).collection_date + '"}');
+                        //$log.log('{"' + res.rows.item(i).waste_type + '":"' + res.rows.item(i).collection_date + '"}');
 
                     }
                     $scope.showDates = true;
                 } else {
                     $scope.showDates = false;
-                    console.log("loadDatesForCurrentStreet: no result");
+                    $log.log("loadDatesForCurrentStreet: no result");
                     LoadingSpinner.hide();
                     if (window.spinnerplugin) {
                         window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
@@ -76,12 +76,12 @@ var application = angular.module('app.controllers', [])
                 }
                 LoadingSpinner.hide();
             }, function (err) {
-                console.error(err)
+                $log.log(err)
             })
         }
 
         function searchForStreetName(address, count) {
-            console.log("searchForStreetName", address, count);
+            $log.log("searchForStreetName", address, count);
             count = count || 0;
             var street = address.street,
                 def = $q.defer();
@@ -107,7 +107,7 @@ var application = angular.module('app.controllers', [])
         }
 
         function getDatesForType(type) {
-            console.log("getDatesForType: " + type);
+            $log.log("getDatesForType: " + type);
             var q = $q.defer();
             DB.getDatesForType(type, $scope.query.street, $scope.query.hnr).then(function (res) {
                 q.resolve(res);
@@ -137,22 +137,22 @@ var application = angular.module('app.controllers', [])
             $scope.pushRM14 = false;
             $scope.showDates = false;
             var dates = [];
-            console.log("getDates Sende Straße und Hausnummer: " + $scope.query.street + " " + $scope.query.hnr);
+            $log.log("getDates Sende Straße und Hausnummer: " + $scope.query.street + " " + $scope.query.hnr);
             $http.get(pwm_url + '?strasse=' + $scope.query.street + '+&hnr=' + $scope.query.hnr).
                 success(function (data) {
-                    console.log("getDates Antwort erhalten:", data);
+                    $log.log("getDates Antwort erhalten:", data);
 
 
                     // In Datenbank schreiben
                     angular.forEach(data, function (value, key) {
-                        console.log("key", key);
+                        $log.log("key", key);
 
                         for (var i = 0; i < value.length; i++) {
                             var date = value[i].trim();
 
                             date = date.substring(0, 10);
                             date = date.substring(6, 10) + '-' + date.substring(3, 5) + '-' + date.substring(0, 2);
-                            console.log(key + ' ' + date);
+                            $log.log(key + ' ' + date);
 
                             dates.push({
                                 "street": $scope.query.street,
@@ -167,12 +167,12 @@ var application = angular.module('app.controllers', [])
                         saveStreetChoice();
                         loadDatesForCurrentStreet();
                     }, function (err) {
-                        console.log(err);
+                        $log.log(err);
                     });
 
                 }).
                 error(function (data, status, headers, config) {
-                    console.log("getDates Fehler", data);
+                    $log.log("getDates Fehler", data);
                     $scope.showDates = false;
 
                     LoadingSpinner.hide();
@@ -184,7 +184,7 @@ var application = angular.module('app.controllers', [])
 
 
         $scope.getStreets = function (street, hnr) {
-            console.log("function getStreets: " + street);
+            $log.log("function getStreets: " + street);
             $scope.updateSearchBtn();
             $scope.streetSuggestions = [];
 
@@ -193,7 +193,7 @@ var application = angular.module('app.controllers', [])
                     $scope.streetSuggestions = streetSuggestions;
                     $scope.showSuggestions = true;
                 }, function (err) {
-                    console.log(err);
+                    $log.log(err);
                     $scope.showSuggestions = false;
                 });
 
@@ -203,7 +203,7 @@ var application = angular.module('app.controllers', [])
 
         $scope.getStreetFromLocation = function () {
 
-            console.log("getStreetFromLocation");
+            $log.log("getStreetFromLocation");
 
             LoadingSpinner.show();
 
@@ -219,9 +219,9 @@ var application = angular.module('app.controllers', [])
                             $scope.query.hnr = result.number;
                             $scope.getDates();
                         }, function (err) {
-                            console.log(err);
+                            $log.log(err);
                             // TODO: wenn Straße nicht in DB ist, Error anzeigen
-                            console.log("getStreetFromLocation: Straße nicht in PF gefunden: " + address.street);
+                            $log.log("getStreetFromLocation: Straße nicht in PF gefunden: " + address.street);
 							LoadingSpinner.hide();
 							if (window.spinnerplugin) {
 								window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
@@ -287,7 +287,7 @@ var application = angular.module('app.controllers', [])
                 var dates;
                 getDatesForType('Bio').then(function (res) {
                     dates = res;
-                    console.log(dates);
+                    $log.log(dates);
                     var bioIds = 1000;
                     for (var i = 0; i < dates.length; i++) {
                         var msecPerDay = 24 * 60 * 60 * 1000,
@@ -301,7 +301,7 @@ var application = angular.module('app.controllers', [])
                             message: 'Morgen ist Biomüll',
                             title: 'Biotonne'
                         }).then(function () {
-                            console.log('callback for adding background notification');
+                            $log.log('callback for adding background notification');
                         });
                         bioIds++;
                     }
@@ -311,7 +311,7 @@ var application = angular.module('app.controllers', [])
                     for (var i = 0; i < scheduledIds; i++) {
                         if (scheduledIds[i] >= 1000 && scheduledIds[i] < 2000) {
                             $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                console.log('callback for cancellation background notification');
+                                $log.log('callback for cancellation background notification');
                             });
                         }
                     }
@@ -330,7 +330,7 @@ var application = angular.module('app.controllers', [])
                 var dates;
                 getDatesForType('Gelb').then(function (res) {
                     dates = res;
-                    console.log(dates);
+                    $log.log(dates);
                     var gelbIds = 2000;
                     for (var i = 0; i < dates.length; i++) {
                         var msecPerDay = 24 * 60 * 60 * 1000,
@@ -344,7 +344,7 @@ var application = angular.module('app.controllers', [])
                             message: 'Morgen ist Gelbe Tonne',
                             title: 'Gelbe Tonne'
                         }).then(function () {
-                            console.log('callback for adding background notification');
+                            $log.log('callback for adding background notification');
                         });
                         gelbIds++;
                     }
@@ -354,7 +354,7 @@ var application = angular.module('app.controllers', [])
                     for (var i = 0; i < scheduledIds; i++) {
                         if (scheduledIds[i] >= 2000 && scheduledIds[i] < 3000) {
                             $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                console.log('callback for cancellation background notification');
+                                $log.log('callback for cancellation background notification');
                             });
                         }
                     }
@@ -373,7 +373,7 @@ var application = angular.module('app.controllers', [])
                 var dates;
                 getDatesForType('Papier').then(function (res) {
                     dates = res;
-                    console.log(dates);
+                    $log.log(dates);
                     var papierIds = 3000;
                     for (var i = 0; i < dates.length; i++) {
                         var msecPerDay = 24 * 60 * 60 * 1000,
@@ -387,7 +387,7 @@ var application = angular.module('app.controllers', [])
                             message: 'Morgen ist Papiermüll',
                             title: 'Papier Tonne'
                         }).then(function () {
-                            console.log('callback for adding background notification');
+                            $log.log('callback for adding background notification');
                         });
                         papierIds++;
                     }
@@ -397,7 +397,7 @@ var application = angular.module('app.controllers', [])
                     for (var i = 0; i < scheduledIds; i++) {
                         if (scheduledIds[i] >= 3000 && scheduledIds[i] < 4000) {
                             $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                console.log('callback for cancellation background notification');
+                                $log.log('callback for cancellation background notification');
                             });
                         }
                     }
@@ -416,7 +416,7 @@ var application = angular.module('app.controllers', [])
                 var dates;
                 getDatesForType('RM').then(function (res) {
                     dates = res;
-                    console.log(dates);
+                    $log.log(dates);
                     var rmIds = 4000;
                     for (var i = 0; i < dates.length; i++) {
                         var msecPerDay = 24 * 60 * 60 * 1000,
@@ -430,18 +430,18 @@ var application = angular.module('app.controllers', [])
                             message: 'Morgen ist 7 tägiger Restmüll',
                             title: 'Restmüll 7 tägig'
                         }).then(function () {
-                            console.log('callback for adding background notification');
+                            $log.log('callback for adding background notification');
                         });
                         rmIds++;
                     }
                 });
             } else {
                 $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
-                    console.log(scheduledIds);
+                    $log.log(scheduledIds);
                     for (var i = 0; i < scheduledIds; i++) {
                         if (scheduledIds[i] >= 4000 && scheduledIds[i] < 5000) {
                             $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                console.log('callback for cancellation background notification');
+                                $log.log('callback for cancellation background notification');
                             });
                         }
                     }
@@ -460,7 +460,7 @@ var application = angular.module('app.controllers', [])
                 var dates;
                 getDatesForType('Gelb').then(function (res) {
                     dates = res;
-                    console.log(dates);
+                    $log.log(dates);
                     var rm14Ids = 5000;
                     for (var i = 0; i < dates.length; i++) {
                         var msecPerDay = 24 * 60 * 60 * 1000,
@@ -474,18 +474,18 @@ var application = angular.module('app.controllers', [])
                             message: 'Morgen ist 14 tägiger Restmüll',
                             title: 'Restmüll 14 tägig'
                         }).then(function () {
-                            console.log('callback for adding background notification');
+                            $log.log('callback for adding background notification');
                         });
                         rm14Ids++;
                     }
                 });
             } else {
                 $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
-                    console.log(scheduledIds);
+                    $log.log(scheduledIds);
                     for (var i = 0; i < scheduledIds; i++) {
                         if (scheduledIds[i] >= 5000 && scheduledIds[i] < 6000) {
                             $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                console.log('callback for cancellation background notification');
+                                $log.log('callback for cancellation background notification');
                             });
                         }
                     }
@@ -496,7 +496,7 @@ var application = angular.module('app.controllers', [])
 
         // INIT CONTROLLER
         $rootScope.dbReady.then(function () {
-            console.log("AppCtrl dbReady fired");
+            $log.log("AppCtrl dbReady fired");
             initController();
         });
     });

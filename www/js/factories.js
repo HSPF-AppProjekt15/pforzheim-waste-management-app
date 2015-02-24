@@ -1,13 +1,13 @@
 'use strict';
 
 var pfAppF = angular.module('app.factories', []);
-pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
+pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
 
     var db_;
 
     // private methods
     var openDB_ = function (dbName) {
-        console.log("openDB_ called", dbName);
+        $log.log("openDB_ called", dbName);
         var q = $q.defer();
         try {
             if (window.sqlitePlugin !== undefined) {
@@ -25,14 +25,14 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
     };
 
     var createTable_ = function (tableName, schema) {
-        console.log("createTable called");
+        $log.log("createTable called");
         var q = $q.defer(),
             query = "CREATE TABLE IF NOT EXISTS " + tableName + " ( " + schema + " )";
         $cordovaSQLite.execute(db_, query).then(function () {
-            console.log("Table created: ", tableName);
+            $log.log("Table created: ", tableName);
             q.resolve(tableName)
         }, function (err) {
-            console.log("Table " + tableName + " could not be created: ", err);
+            $log.log("Table " + tableName + " could not be created: ", err);
             q.reject(err)
         });
 
@@ -45,7 +45,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
         $cordovaSQLite.execute(db_, sqlStatement, bindings).then(function (res) {
             q.resolve(res);
         }, function (err) {
-            console.log("Select could not be retrieved. ", err);
+            $log.log("Select could not be retrieved. ", err);
             q.reject(err);
         });
 
@@ -58,7 +58,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
         $cordovaSQLite.execute(db_, sqlStatement, bindings).then(function (res) {
             q.resolve(res);
         }, function (err) {
-            console.log("Insert could not be done. ", err);
+            $log.log("Insert could not be done. ", err);
             q.reject(err);
         });
 
@@ -66,7 +66,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
     };
 
     var initDB = function () {
-        console.log("initDB called");
+        $log.log("initDB called");
         var q = $q.defer();
         // successively call private methods, chaining to next with .then()
         openDB_("pwm").then(function (db) {
@@ -78,10 +78,10 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
                     var query = "SELECT * FROM streets";
                     selectFromTable_(query, []).then(function (res) {
                         if (res.rows.length > 0) {
-                            console.log("Tabelle streets schon gefüllt");
+                            $log.log("Tabelle streets schon gefüllt");
                             q.resolve();
                         } else {
-                            console.log("Tabelle streets noch nicht gefüllt. Mit Daten füllen.");
+                            $log.log("Tabelle streets noch nicht gefüllt. Mit Daten füllen.");
                             // Aus Datei einlesen und in DB schreiben
                             var streets_json = {};
                             $http.get('streets.json').success(function (data) {
@@ -101,7 +101,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
                 });
             });
         }, function (err) {
-            console.log(err);
+            $log.log(err);
             q.reject(err);
         });
         return q.promise;
@@ -114,7 +114,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
         selectFromTable_(query, [street + '%']).then(function (res) {
             if (res.rows.length > 0) {
                 for (var i = 0; i < res.rows.length; i++) {
-                    //console.log(res.rows.item(i).street_name);
+                    //$log.log(res.rows.item(i).street_name);
                     streetSuggestions.push(res.rows.item(i).street_name);
                 }
                 q.resolve(streetSuggestions);
@@ -130,13 +130,13 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
         var query = "SELECT collection_date FROM collection_dates WHERE waste_type= ? AND (SELECT street_id FROM streets WHERE street_name= ? ) AND house_number = ? AND collection_date > date('now','localtime') ORDER BY collection_dates.collection_date",
             q = $q.defer(),
             dates = [];
-        console.log("DB.getDatesForType called: " + type);
+        $log.log("DB.getDatesForType called: " + type);
         selectFromTable_(query, [type, street, hnr]).then(function (res) {
             if (res.rows.length > 0) {
                 for (var i = 0; i < res.rows.length; i++) {
                     dates.push(res.rows.item(i).collection_date);
                 }
-                console.log("DB.getDatesForType resolve: " + dates);
+                $log.log("DB.getDatesForType resolve: " + dates);
                 q.resolve(dates);
             } else {
                 q.reject();
@@ -151,19 +151,19 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
         var query = "SELECT street_name FROM streets WHERE street_name = ?",
             q = $q.defer();
 
-        console.log("isStreetInDB 1: " + street);
+        $log.log("isStreetInDB 1: " + street);
         selectFromTable_(query, [street]).then(function (res) {
                 if (res.rows.length > 0) {
-                    console.log("DB.isStreetInDB Straße exakt: " + street);
+                    $log.log("DB.isStreetInDB Straße exakt: " + street);
                     q.resolve(street);
                 } else {
 
-                    console.log("isStreetInDB 2: " + street);
+                    $log.log("isStreetInDB 2: " + street);
                     // wenn nicht, dann schauen, ob genau eine ähnliche Straße in DB ist
                     query = "SELECT street_name FROM streets WHERE street_name LIKE ?";
                     selectFromTable_(query, [street + '%']).then(function (res) {
                         if (res.rows.length == 1) {
-                            console.log("DB.isStreetInDB Straße ähnlich: " + res.rows.item(0).street_name);
+                            $log.log("DB.isStreetInDB Straße ähnlich: " + res.rows.item(0).street_name);
                             q.resolve(res.rows.item(0).street_name);
                         } else {
                             q.reject();
@@ -172,7 +172,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
                 }
             },
             function (err) {
-                console.log("Error: ", err);
+                $log.log("Error: ", err);
             });
         return q.promise;
     };
@@ -215,7 +215,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http) {
 pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
     return {
         getStreetName: function () {
-            console.log("GeoLocation.getStreetName()");
+            $log.log("GeoLocation.getStreetName()");
             var posOptions = {
                     timeout: 10000,
                     enableHighAccuracy: true
@@ -233,11 +233,11 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
                         long = position.coords.longitude,
                         url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&language=de&location_type=ROOFTOP&result_type=street_address&key=" + googleGeoLoc_API_Key;
 
-                    console.log("getCurrentPosition: " + lat + "," + long);
+                    $log.log("getCurrentPosition: " + lat + "," + long);
 
                     $http.get(url).
                         success(function (data, status, headers, config) {
-                            console.log("GeoLocation.getStreetName Antwort erhalten:" + data);
+                            $log.log("GeoLocation.getStreetName Antwort erhalten:" + data);
                             var address_components = data.results[0].address_components;
                             for (var i = 0; i < address_components.length; i++) {
                                 if (address_components[i].types[0] == "route") {
@@ -249,7 +249,7 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
                             deferred.resolve(address);
                         }).
                         error(function (data, status, headers, config) {
-                            console.log("GeoLocation Fehler" + data);
+                            $log.log("GeoLocation Fehler" + data);
                             deferred.reject("GeoLocation Fehler", data);
                         });
                 }, function (err) {

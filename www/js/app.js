@@ -9,7 +9,7 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
         localStorageServiceProvider.setPrefix('pforzheimAbfallApp');
     })
 
-    .run(function ($rootScope, $q,DB) {
+    .run(function ($rootScope, $q,DB,$log) {
         var q = $q.defer();
         $rootScope.dbReady = q.promise;
 
@@ -33,9 +33,9 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
         function onDeviceReady() {
             DB.initDB().then(function () {
                 q.resolve();
-                console.log("initDB promise resolved, dbReady resolved");
+                $log.log("initDB promise resolved, dbReady resolved");
             }, function (err) {
-                console.log("App.js Fehler:", err);
+                $log.log("App.js Fehler:", err);
             });
         };
 
