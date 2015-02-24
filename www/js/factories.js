@@ -1,7 +1,30 @@
 'use strict';
 
 var pfAppF = angular.module('app.factories', []);
-pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger) {
+pfAppF.factory('AppReady', function ($q, $rootScope,Logger) {
+    var q = $q.defer();
+    $rootScope.dbReady = q.promise;
+
+    var isCordovaApp = (typeof window.cordova !== "undefined");
+    if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
+        //if(isCordovaApp) {
+        document.addEventListener("deviceready", onDeviceReady, false);
+    } else {
+        onDeviceReady();
+    }
+    function onDeviceReady() {
+        Logger.log("AppReady Factory: app is ready");
+        $rootScope.$apply(q.resolve());
+    }
+
+    return {
+        ready: function () {
+            return q.promise;
+        }
+    }
+});
+
+pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
 
     var db_;
 
@@ -264,9 +287,11 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) 
         }
     };
 });
-pfAppF.factory('LoadingSpinner', function (Logger) {
-    var spinner_=window.spinnerplugin;
+pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
+    var spinner_;
     var show = function () {
+        //spinnerplugin.show();
+        console.log("Spinnerplugin show");
         if(isAvailable()) {
             try {
                 spinner_.show();
@@ -282,13 +307,16 @@ pfAppF.factory('LoadingSpinner', function (Logger) {
         }
     };
     function isAvailable() {
-        Logger.log("spinnerplugin: "+JSON.stringify(window.spinnerplugin));
         return (typeof window.spinnerplugin !== "undefined");
     }
 
     if(isAvailable()) {
         spinner_=window.spinnerplugin;
     }
+    AppReady.ready().then(function () {
+            spinner_ = window.spinnerplugin;
+        }
+    );
     return {
         show: show,
         hide: hide

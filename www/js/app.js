@@ -8,17 +8,9 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
         localStorageServiceProvider.setPrefix('pforzheimAbfallApp');
     })
 
-    .run(function ($rootScope, $q,DB,Logger) {
-        var q = $q.defer();
-        $rootScope.dbReady = q.promise;
+    .run(function (AppReady,$rootScope, $q,DB,Logger) {
 
-        var isCordovaApp = (typeof window.cordova !== "undefined");
-        if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
-        //if(isCordovaApp) {
-            document.addEventListener("deviceready", onDeviceReady, false);
-        } else {
-            onDeviceReady();
-        }
+
         //document.addEventListener("deviceready", function () {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
@@ -29,14 +21,13 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
          StatusBar.styleDefault();
          }
          */
-        function onDeviceReady() {
+
             DB.initDB().then(function () {
-                q.resolve();
                 Logger.log("initDB promise resolved, dbReady resolved");
             }, function (err) {
                 Logger.log("App.js Fehler:", err);
             });
-        }
+
 
         //}, false);
 

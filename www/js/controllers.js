@@ -5,7 +5,7 @@ var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
 var application = angular.module('app.controllers', [])
 
-    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB,LoadingSpinner, localStorageService, $q, $cordovaLocalNotification, Logger) {
+    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB,LoadingSpinner, localStorageService, $q, $cordovaLocalNotification, Logger,$timeout) {
         $scope.query = {
             "street": "",
             "hnr": ""
@@ -44,6 +44,7 @@ var application = angular.module('app.controllers', [])
             log("function loadDatesForCurrentStreet");
             $scope.dates = [];
             DB.loadDatesForCurrentStreet($scope.query.street, $scope.query.hnr).then(function (res) {
+                log("DB.loadDatesForCurrentStreet result length: ", res.length);
                 if (res.rows.length > 0) {
                     var loop_last_change_cd;
                     var last_index = 0;
@@ -508,14 +509,16 @@ var application = angular.module('app.controllers', [])
 
         // INIT CONTROLLER
         $rootScope.dbReady.then(function () {
-            console.log("testest");
             log("AppCtrl dbReady fired");
-            try {
-                log("spinner:" +JSON.stringify(spinnerplugin));
-            }
-            catch (e) {
-                log(e);
-            }
+            $timeout(function () {
+                try {
+                    log("spinner:" +JSON.stringify(spinnerplugin));
+                }
+                catch (e) {
+                    log(e);
+                }
+            },5000);
+
             initController();
         });
     });
