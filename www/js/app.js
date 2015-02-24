@@ -1,5 +1,4 @@
-// Ionic Starter App
-
+'use strict';
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
@@ -9,7 +8,7 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
         localStorageServiceProvider.setPrefix('pforzheimAbfallApp');
     })
 
-    .run(function ($rootScope, $q,DB,$log) {
+    .run(function ($rootScope, $q,DB,Logger) {
         var q = $q.defer();
         $rootScope.dbReady = q.promise;
 
@@ -33,11 +32,12 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
         function onDeviceReady() {
             DB.initDB().then(function () {
                 q.resolve();
-                $log.log("initDB promise resolved, dbReady resolved");
+                Logger.log("initDB promise resolved, dbReady resolved");
             }, function (err) {
-                $log.log("App.js Fehler:", err);
+                Logger.log("App.js Fehler:", err);
             });
-        };
+        }
 
         //}, false);
+
     });

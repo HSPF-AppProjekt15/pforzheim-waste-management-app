@@ -1,13 +1,17 @@
 'use strict';
 
 var pfAppF = angular.module('app.factories', []);
-pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
+pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger) {
 
     var db_;
 
+    function log(msg) {
+        Logger.log(msg);
+    }
+
     // private methods
     var openDB_ = function (dbName) {
-        $log.log("openDB_ called", dbName);
+        log("openDB_ called", dbName);
         var q = $q.defer();
         try {
             if (window.sqlitePlugin !== undefined) {
@@ -25,14 +29,14 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
     };
 
     var createTable_ = function (tableName, schema) {
-        $log.log("createTable called");
+        log("createTable called");
         var q = $q.defer(),
             query = "CREATE TABLE IF NOT EXISTS " + tableName + " ( " + schema + " )";
         $cordovaSQLite.execute(db_, query).then(function () {
-            $log.log("Table created: ", tableName);
+            log("Table created: ", tableName);
             q.resolve(tableName)
         }, function (err) {
-            $log.log("Table " + tableName + " could not be created: ", err);
+            log("Table " + tableName + " could not be created: ", err);
             q.reject(err)
         });
 
@@ -45,7 +49,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
         $cordovaSQLite.execute(db_, sqlStatement, bindings).then(function (res) {
             q.resolve(res);
         }, function (err) {
-            $log.log("Select could not be retrieved. ", err);
+            log("Select could not be retrieved. ", err);
             q.reject(err);
         });
 
@@ -58,7 +62,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
         $cordovaSQLite.execute(db_, sqlStatement, bindings).then(function (res) {
             q.resolve(res);
         }, function (err) {
-            $log.log("Insert could not be done. ", err);
+            log("Insert could not be done. ", err);
             q.reject(err);
         });
 
@@ -66,7 +70,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
     };
 
     var initDB = function () {
-        $log.log("initDB called");
+        log("initDB called");
         var q = $q.defer();
         // successively call private methods, chaining to next with .then()
         openDB_("pwm").then(function (db) {
@@ -78,10 +82,10 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
                     var query = "SELECT * FROM streets";
                     selectFromTable_(query, []).then(function (res) {
                         if (res.rows.length > 0) {
-                            $log.log("Tabelle streets schon gefüllt");
+                            log("Tabelle streets schon gefüllt");
                             q.resolve();
                         } else {
-                            $log.log("Tabelle streets noch nicht gefüllt. Mit Daten füllen.");
+                            log("Tabelle streets noch nicht gefüllt. Mit Daten füllen.");
                             // Aus Datei einlesen und in DB schreiben
                             var streets_json = {};
                             $http.get('streets.json').success(function (data) {
@@ -101,7 +105,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
                 });
             });
         }, function (err) {
-            $log.log(err);
+            log(err);
             q.reject(err);
         });
         return q.promise;
@@ -114,7 +118,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
         selectFromTable_(query, [street + '%']).then(function (res) {
             if (res.rows.length > 0) {
                 for (var i = 0; i < res.rows.length; i++) {
-                    //$log.log(res.rows.item(i).street_name);
+                    //log(res.rows.item(i).street_name);
                     streetSuggestions.push(res.rows.item(i).street_name);
                 }
                 q.resolve(streetSuggestions);
@@ -130,13 +134,13 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
         var query = "SELECT collection_date FROM collection_dates WHERE waste_type= ? AND (SELECT street_id FROM streets WHERE street_name= ? ) AND house_number = ? AND collection_date > date('now','localtime') ORDER BY collection_dates.collection_date",
             q = $q.defer(),
             dates = [];
-        $log.log("DB.getDatesForType called: " + type);
+        log("DB.getDatesForType called: " + type);
         selectFromTable_(query, [type, street, hnr]).then(function (res) {
             if (res.rows.length > 0) {
                 for (var i = 0; i < res.rows.length; i++) {
                     dates.push(res.rows.item(i).collection_date);
                 }
-                $log.log("DB.getDatesForType resolve: " + dates);
+                log("DB.getDatesForType resolve: " + dates);
                 q.resolve(dates);
             } else {
                 q.reject();
@@ -151,19 +155,19 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
         var query = "SELECT street_name FROM streets WHERE street_name = ?",
             q = $q.defer();
 
-        $log.log("isStreetInDB 1: " + street);
+        log("isStreetInDB 1: " + street);
         selectFromTable_(query, [street]).then(function (res) {
                 if (res.rows.length > 0) {
-                    $log.log("DB.isStreetInDB Straße exakt: " + street);
+                    log("DB.isStreetInDB Straße exakt: " + street);
                     q.resolve(street);
                 } else {
 
-                    $log.log("isStreetInDB 2: " + street);
+                    log("isStreetInDB 2: " + street);
                     // wenn nicht, dann schauen, ob genau eine ähnliche Straße in DB ist
                     query = "SELECT street_name FROM streets WHERE street_name LIKE ?";
                     selectFromTable_(query, [street + '%']).then(function (res) {
                         if (res.rows.length == 1) {
-                            $log.log("DB.isStreetInDB Straße ähnlich: " + res.rows.item(0).street_name);
+                            log("DB.isStreetInDB Straße ähnlich: " + res.rows.item(0).street_name);
                             q.resolve(res.rows.item(0).street_name);
                         } else {
                             q.reject();
@@ -172,7 +176,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
                 }
             },
             function (err) {
-                $log.log("Error: ", err);
+                log("Error: ", err);
             });
         return q.promise;
     };
@@ -212,10 +216,10 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, $log) {
         getDatesForType: getDatesForType
     }
 });
-pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
+pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) {
     return {
         getStreetName: function () {
-            $log.log("GeoLocation.getStreetName()");
+            Logger.log("GeoLocation.getStreetName()");
             var posOptions = {
                     timeout: 10000,
                     enableHighAccuracy: true
@@ -233,11 +237,11 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
                         long = position.coords.longitude,
                         url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&language=de&location_type=ROOFTOP&result_type=street_address&key=" + googleGeoLoc_API_Key;
 
-                    $log.log("getCurrentPosition: " + lat + "," + long);
+                    Logger.log("getCurrentPosition: " + lat + "," + long);
 
                     $http.get(url).
-                        success(function (data, status, headers, config) {
-                            $log.log("GeoLocation.getStreetName Antwort erhalten:" + data);
+                        success(function (data) {
+                            Logger.log("GeoLocation.getStreetName Antwort erhalten:" + data);
                             var address_components = data.results[0].address_components;
                             for (var i = 0; i < address_components.length; i++) {
                                 if (address_components[i].types[0] == "route") {
@@ -248,8 +252,8 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
                             }
                             deferred.resolve(address);
                         }).
-                        error(function (data, status, headers, config) {
-                            $log.log("GeoLocation Fehler" + data);
+                        error(function (data) {
+                            Logger.log("GeoLocation Fehler" + data);
                             deferred.reject("GeoLocation Fehler", data);
                         });
                 }, function (err) {
@@ -260,11 +264,16 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q) {
         }
     };
 });
-pfAppF.factory('LoadingSpinner', function () {
-    var spinner_ = window.spinnerplugin;
+pfAppF.factory('LoadingSpinner', function (Logger) {
+    var spinner_=window.spinnerplugin;
     var show = function () {
         if(isAvailable()) {
-            spinner_.show();
+            try {
+                spinner_.show();
+            }
+            catch (err) {
+                Logger.log(err);
+            }
         }
     };
     var hide = function () {
@@ -273,11 +282,33 @@ pfAppF.factory('LoadingSpinner', function () {
         }
     };
     function isAvailable() {
-        return (typeof spinner_ !== "undefined");
+        Logger.log("spinnerplugin: "+JSON.stringify(window.spinnerplugin));
+        return (typeof window.spinnerplugin !== "undefined");
     }
 
+    if(isAvailable()) {
+        spinner_=window.spinnerplugin;
+    }
     return {
         show: show,
         hide: hide
+    }
+});
+
+pfAppF.factory('Logger', function ($log) {
+    var useConsole=true;
+    var log = function (msg) {
+        if (arguments.length > 1) {
+            msg=Array.prototype.slice.call(arguments).join(" ");
+        }
+        if(useConsole) {
+            console.log(msg);
+        }
+        else {
+            $log.log(msg);
+        }
+    };
+    return {
+        log:log
     }
 });
