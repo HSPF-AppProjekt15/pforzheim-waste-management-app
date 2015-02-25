@@ -21,12 +21,14 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
          StatusBar.styleDefault();
          }
          */
-
+        AppReady.ready().then(function () {
             DB.initDB().then(function () {
                 Logger.log("initDB promise resolved, dbReady resolved");
             }, function (err) {
                 Logger.log("App.js Fehler:", err);
             });
+        });
+
 
 
         //}, false);
