@@ -29,7 +29,6 @@ application = angular.module('app.controllers', [])
         $scope.pushRM = typeof localStorageService.get("RM") !== 'object' ? localStorageService.get("RM") : false;
         $scope.pushRM14 = typeof localStorageService.get("RM14") !== 'object' ? localStorageService.get("RM14") : false;
 
-
         // Private Methods
         function log(msg) {
             Logger.log(msg);
@@ -126,10 +125,10 @@ application = angular.module('app.controllers', [])
             localStorageService.set(type, active);
             if (active === true) {
                 getDatesForType(type).then(function (res) {
-                    Notifications.addNotificationForType(type, res);
+                    Notifications.addNotificationForType(type, res, $scope);
                 });
             } else {
-                Notifications.cancelNotificationForType(type);
+                Notifications.cancelNotificationForType(type, $scope);
             }
         }
 
@@ -271,15 +270,6 @@ application = angular.module('app.controllers', [])
             $scope.showSuggestions = false;
         };
 
-        /*    $scope.open = function () {
-         var modalInstance = $modal.open({
-         templateUrl: 'myModalContent.html',
-         controller: 'ModalInstanceCtrl',
-         size: 'sm',
-         resolve: {}
-         });
-         };*/
-
         $scope.$watch('notifications', function (newValue, oldValue) {
             // Check if value has changes
             if (newValue === oldValue) {
@@ -301,8 +291,6 @@ application = angular.module('app.controllers', [])
                 $scope.pushRM14 = false;
             }
         }, true);
-
-
 
         $scope.$watch('pushBio', function (newValue, oldValue) {
             // Check if value has changes and set notifications
@@ -339,8 +327,6 @@ application = angular.module('app.controllers', [])
             }
         }, true);
 
-
-
         // INIT CONTROLLER
         $rootScope.dbReady.then(function () {
             log("AppCtrl dbReady fired");
@@ -357,10 +343,3 @@ application = angular.module('app.controllers', [])
         });
     });
 
-
-/*
- application.controller('ModalInstanceCtrl', function ($scope, $modalInstance) {
- $scope.ok = function () {
- $modalInstance.dismiss('cancel');
- };
- });*/
