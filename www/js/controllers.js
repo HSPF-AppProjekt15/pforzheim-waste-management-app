@@ -3,9 +3,10 @@
 var pwm_url = "http://pfwastemanagementenv-hd7anwmmbc.elasticbeanstalk.com/ServletConnectorServlet";
 var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 
-var application = angular.module('app.controllers', [])
+var application;
+application = angular.module('app.controllers', [])
 
-    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB,LoadingSpinner, localStorageService, $q, $cordovaLocalNotification, Logger,$timeout) {
+    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, $cordovaLocalNotification, Logger, $timeout, Notifications) {
         $scope.query = {
             "street": "",
             "hnr": ""
@@ -33,6 +34,7 @@ var application = angular.module('app.controllers', [])
         function log(msg) {
             Logger.log(msg);
         }
+
         function saveStreetChoice() {
             log("function saveStreetChoice");
             localStorageService.set('street', $scope.query.street);
@@ -44,7 +46,7 @@ var application = angular.module('app.controllers', [])
             log("function loadDatesForCurrentStreet");
             $scope.dates = [];
             DB.loadDatesForCurrentStreet($scope.query.street, $scope.query.hnr).then(function (res) {
-                log("DB.loadDatesForCurrentStreet result length: ", res.length);
+                log("DB.loadDatesForCurrentStreet result length: " + res.rows.length);
                 if (res.rows.length > 0) {
                     var loop_last_change_cd;
                     var last_index = 0;
@@ -119,6 +121,18 @@ var application = angular.module('app.controllers', [])
 
             return q.promise;
         }
+
+        function setNotifications(active, type) {
+            localStorageService.set(type, active);
+            if (active === true) {
+                getDatesForType(type).then(function (res) {
+                    Notifications.addNotificationForType(type, res);
+                });
+            } else {
+                Notifications.cancelNotificationForType(type);
+            }
+        }
+
 
         function initController() {
             if (localStorageService.get('street') && localStorageService.get('hnr')) {
@@ -229,10 +243,10 @@ var application = angular.module('app.controllers', [])
                             log(err);
                             // TODO: wenn Straße nicht in DB ist, Error anzeigen
                             log("getStreetFromLocation: Straße nicht in PF gefunden: " + address.street);
-							LoadingSpinner.hide();
-							if (window.spinnerplugin) {
-								window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
-							}
+                            LoadingSpinner.hide();
+                            if (window.spinnerplugin) {
+                                window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
+                            }
                         })
 
                     }
@@ -250,7 +264,6 @@ var application = angular.module('app.controllers', [])
         $scope.updateSearchBtn = function () {
             $scope.searchBtn = ($scope.query.street != "" && $scope.query.hnr > 0);
         };
-
 
 
         $scope.selectStreet = function (street) {
@@ -289,222 +302,43 @@ var application = angular.module('app.controllers', [])
             }
         }, true);
 
-        $scope.$watch('pushBio', function (newValue, oldValue) {
-            // Check if value has changes
-            if (newValue === oldValue) {
-                return;
-            }
-            // To do: register next push
-            localStorageService.set("Bio", newValue);
-            if (newValue === true) {
-                var dates;
-                getDatesForType('Bio').then(function (res) {
-                    dates = res;
-                    log(dates);
-                    var bioIds = 1000;
-                    for (var i = 0; i < dates.length; i++) {
-                        var msecPerDay = 24 * 60 * 60 * 1000,
-                            date = dates[i] + "T17:00:00",
-                            today = new Date(date),
-                            yesterday = new Date(today.getTime() - msecPerDay);
 
-                        $cordovaLocalNotification.add({
-                            id: bioIds,
-                            date: yesterday,
-                            message: 'Morgen ist Biomüll',
-                            title: 'Biotonne'
-                        }).then(function () {
-                            log('callback for adding background notification');
-                        });
-                        bioIds++;
-                    }
-                });
-            } else {
-                $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
-                    for (var i = 0; i < scheduledIds; i++) {
-                        if (scheduledIds[i] >= 1000 && scheduledIds[i] < 2000) {
-                            $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                log('callback for cancellation background notification');
-                            });
-                        }
-                    }
-                });
+
+        $scope.$watch('pushBio', function (newValue, oldValue) {
+            // Check if value has changes and set notifications
+            if(newValue!==oldValue) {
+                setNotifications(newValue,"Bio");
             }
         }, true);
 
         $scope.$watch('pushGelb', function (newValue, oldValue) {
-            // Check if value has changes
-            if (newValue === oldValue) {
-                return;
-            }
-            // To do: register next push
-            localStorageService.set("Gelb", newValue);
-            if (newValue === true) {
-                var dates;
-                getDatesForType('Gelb').then(function (res) {
-                    dates = res;
-                    log(dates);
-                    var gelbIds = 2000;
-                    for (var i = 0; i < dates.length; i++) {
-                        var msecPerDay = 24 * 60 * 60 * 1000,
-                            date = dates[i] + "T17:00:00",
-                            today = new Date(date),
-                            yesterday = new Date(today.getTime() - msecPerDay);
-
-                        $cordovaLocalNotification.add({
-                            id: gelbIds,
-                            date: yesterday,
-                            message: 'Morgen ist Gelbe Tonne',
-                            title: 'Gelbe Tonne'
-                        }).then(function () {
-                            log('callback for adding background notification');
-                        });
-                        gelbIds++;
-                    }
-                });
-            } else {
-                $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
-                    for (var i = 0; i < scheduledIds; i++) {
-                        if (scheduledIds[i] >= 2000 && scheduledIds[i] < 3000) {
-                            $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                log('callback for cancellation background notification');
-                            });
-                        }
-                    }
-                });
+            // Check if value has changes and set notifications
+            if(newValue!==oldValue) {
+                setNotifications(newValue,"Gelb");
             }
         }, true);
 
         $scope.$watch('pushPapier', function (newValue, oldValue) {
-            // Check if value has changes
-            if (newValue === oldValue) {
-                return;
-            }
-            // To do: register next push
-            localStorageService.set("Papier", newValue);
-            if (newValue === true) {
-                var dates;
-                getDatesForType('Papier').then(function (res) {
-                    dates = res;
-                    log(dates);
-                    var papierIds = 3000;
-                    for (var i = 0; i < dates.length; i++) {
-                        var msecPerDay = 24 * 60 * 60 * 1000,
-                            date = dates[i] + "T17:00:00",
-                            today = new Date(date),
-                            yesterday = new Date(today.getTime() - msecPerDay);
-
-                        $cordovaLocalNotification.add({
-                            id: papierIds,
-                            date: yesterday,
-                            message: 'Morgen ist Papiermüll',
-                            title: 'Papier Tonne'
-                        }).then(function () {
-                            log('callback for adding background notification');
-                        });
-                        papierIds++;
-                    }
-                });
-            } else {
-                $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
-                    for (var i = 0; i < scheduledIds; i++) {
-                        if (scheduledIds[i] >= 3000 && scheduledIds[i] < 4000) {
-                            $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                log('callback for cancellation background notification');
-                            });
-                        }
-                    }
-                });
+            // Check if value has changes and set notifications
+            if(newValue!==oldValue) {
+                setNotifications(newValue,"Papier");
             }
         }, true);
 
         $scope.$watch('pushRM', function (newValue, oldValue) {
-            // Check if value has changes
-            if (newValue === oldValue) {
-                return;
-            }
-            // To do: register next push
-            localStorageService.set("RM", newValue);
-            if (newValue === true) {
-                var dates;
-                getDatesForType('RM').then(function (res) {
-                    dates = res;
-                    log(dates);
-                    var rmIds = 4000;
-                    for (var i = 0; i < dates.length; i++) {
-                        var msecPerDay = 24 * 60 * 60 * 1000,
-                            date = dates[i] + "T17:00:00",
-                            today = new Date(date),
-                            yesterday = new Date(today.getTime() - msecPerDay);
-
-                        $cordovaLocalNotification.add({
-                            id: rmIds,
-                            date: yesterday,
-                            message: 'Morgen ist 7 tägiger Restmüll',
-                            title: 'Restmüll 7 tägig'
-                        }).then(function () {
-                            log('callback for adding background notification');
-                        });
-                        rmIds++;
-                    }
-                });
-            } else {
-                $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
-                    log(scheduledIds);
-                    for (var i = 0; i < scheduledIds; i++) {
-                        if (scheduledIds[i] >= 4000 && scheduledIds[i] < 5000) {
-                            $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                log('callback for cancellation background notification');
-                            });
-                        }
-                    }
-                });
+            // Check if value has changes and set notifications
+            if(newValue!==oldValue) {
+                setNotifications(newValue,"RM");
             }
         }, true);
 
         $scope.$watch('pushRM14', function (newValue, oldValue) {
-            // Check if value has changes
-            if (newValue === oldValue) {
-                return;
-            }
-            // To do: register next push
-            localStorageService.set("RM14", newValue);
-            if (newValue === true) {
-                var dates;
-                getDatesForType('Gelb').then(function (res) {
-                    dates = res;
-                    log(dates);
-                    var rm14Ids = 5000;
-                    for (var i = 0; i < dates.length; i++) {
-                        var msecPerDay = 24 * 60 * 60 * 1000,
-                            date = dates[i] + "T17:00:00",
-                            today = new Date(date),
-                            yesterday = new Date(today.getTime() - msecPerDay);
-
-                        $cordovaLocalNotification.add({
-                            id: rm14Ids,
-                            date: yesterday,
-                            message: 'Morgen ist 14 tägiger Restmüll',
-                            title: 'Restmüll 14 tägig'
-                        }).then(function () {
-                            log('callback for adding background notification');
-                        });
-                        rm14Ids++;
-                    }
-                });
-            } else {
-                $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
-                    log(scheduledIds);
-                    for (var i = 0; i < scheduledIds; i++) {
-                        if (scheduledIds[i] >= 5000 && scheduledIds[i] < 6000) {
-                            $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                                log('callback for cancellation background notification');
-                            });
-                        }
-                    }
-                });
+            // Check if value has changes and set notifications
+            if(newValue!==oldValue) {
+                setNotifications(newValue,"RM14");
             }
         }, true);
+
 
 
         // INIT CONTROLLER
@@ -512,12 +346,12 @@ var application = angular.module('app.controllers', [])
             log("AppCtrl dbReady fired");
             $timeout(function () {
                 try {
-                    log("spinner:" +JSON.stringify(spinnerplugin));
+                    log("spinner:" + JSON.stringify(spinnerplugin));
                 }
                 catch (e) {
                     log(e);
                 }
-            },5000);
+            }, 5000);
 
             initController();
         });

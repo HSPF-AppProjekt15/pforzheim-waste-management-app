@@ -3,7 +3,6 @@
 var pfAppF = angular.module('app.factories', []);
 pfAppF.factory('AppReady', function ($q, $rootScope,Logger) {
     var q = $q.defer();
-    $rootScope.dbReady = q.promise;
 
     var isCordovaApp = (typeof window.cordova !== "undefined");
     if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
@@ -101,6 +100,11 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
             createTable_("collection_dates", "street_id integer, house_number integer, waste_type text, collection_date date, date_added date, primary key (street_id, house_number, waste_type, collection_date)").then(function () {
                 createTable_("streets", "street_id integer primary key, street_name text").then(function () {
 
+                    selectFromTable_("SELECT count(*) as cnt from collection_dates",[]).then(function (res) {
+                        Logger.log("Anzahl Einträge: "+res.rows.item(0).cnt);
+                    });
+
+
                     // Straßendatenbank aufsetzen, wenn sie noch nicht gefüllt ist
                     var query = "SELECT * FROM streets";
                     selectFromTable_(query, []).then(function (res) {
@@ -163,7 +167,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
                 for (var i = 0; i < res.rows.length; i++) {
                     dates.push(res.rows.item(i).collection_date);
                 }
-                log("DB.getDatesForType resolve: " + dates);
+                //log("DB.getDatesForType resolve: " + dates);
                 q.resolve(dates);
             } else {
                 q.reject();
@@ -310,11 +314,11 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
         return (typeof window.spinnerplugin !== "undefined");
     }
 
-    if(isAvailable()) {
-        spinner_=window.spinnerplugin;
-    }
+
     AppReady.ready().then(function () {
-            spinner_ = window.spinnerplugin;
+            if(isAvailable()) {
+                spinner_=window.spinnerplugin;
+            }
         }
     );
     return {
@@ -339,4 +343,125 @@ pfAppF.factory('Logger', function ($log) {
     return {
         log:log
     }
+});
+
+pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,AppReady) {
+
+    var hasPermission = function () {
+        var q= $q.defer();
+        AppReady.ready().then(function () {
+            Logger.log("app is ready, checking permissions");
+            try {
+
+               window.plugin.notification.local.hasPermission(function (granted) {
+                   Logger.log('Permission already has been granted: ' + granted);
+
+                   if(!granted) {
+                       window.plugin.notification.local.registerPermission(function (granted) {
+                           console.log('Permission has been granted: ' + granted);
+                           if(granted) {
+                               q.resolve();
+                           }
+                           else {
+                               q.reject();
+                           }
+                       });
+                   }
+                   else {
+                       q.resolve();
+                   }
+               });
+            }
+            catch (err) {
+                Logger.log(err);
+                q.reject();
+            }
+        });
+        return q.promise;
+    };
+
+    var addNotifications = function (dates,idStart,message,title) {
+        hasPermission().then(function () {
+            Logger.log(dates);
+            var id = idStart;
+            for (var i = 0; i < dates.length; i++) {
+                var msecPerDay = 24 * 60 * 60 * 1000,
+                    date = dates[i] + "T17:00:00",
+                    today = new Date(date),
+                    yesterday = new Date(today.getTime() - msecPerDay);
+
+                $cordovaLocalNotification.add({
+                    id: id,
+                    date: yesterday,
+                    message: message,
+                    title: title
+                }).then(function () {
+                    Logger.log('added notification: ' + id);
+                });
+                id++;
+            }
+        },function()   {
+            Logger.log("addNotifications has no permission");
+        });
+    };
+
+    var cancelNotifications = function(idStart) {
+        $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
+            for (var i = 0; i < scheduledIds; i++) {
+                if (scheduledIds[i] >= idStart && scheduledIds[i] < idStart+1000) {
+                    $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
+                        Logger.log('callback for cancellation background notification');
+                    });
+                }
+            }
+        });
+    };
+
+    var addNotificationForType = function (type,dates) {
+        switch (type) {
+            case "Bio":
+                addNotifications(dates,1000,"Morgen ist Biomüll.","Biotonne");
+                break;
+            case "Gelb":
+                addNotifications(dates,2000,"Morgen ist gelbe Tonne.","Gelbe Tonne");
+                break;
+            case "Papier":
+                addNotifications(dates,3000,"Morgen ist Papiermüll.","Papiermüll");
+                break;
+            case "RM":
+                addNotifications(dates,4000,"Morgen ist wöchentlicher Restmüll.","Wöchentlicher Restmüll");
+                break;
+            case "RM14":
+                addNotifications(dates,5000,"Morgen ist 14-tägiger Restmüll.","14-tägiger Restmüll");
+                break;
+        }
+    };
+    var cancelNotificationForType = function (type) {
+        switch (type) {
+            case "Bio":
+                cancelNotifications(1000);
+                break;
+            case "Gelb":
+                cancelNotifications(2000);
+                break;
+            case "Papier":
+                cancelNotifications(3000);
+                break;
+            case "RM":
+                cancelNotifications(4000);
+                break;
+            case "RM14":
+                cancelNotifications(5000);
+                break;
+        }
+
+    };
+
+
+
+    return {
+        addNotificationForType: addNotificationForType,
+        cancelNotificationForType:cancelNotificationForType
+
+   }
 });

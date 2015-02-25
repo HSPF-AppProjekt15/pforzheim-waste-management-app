@@ -9,7 +9,8 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
     })
 
     .run(function (AppReady,$rootScope, $q,DB,Logger) {
-
+        var q = $q.defer();
+        $rootScope.dbReady = q.promise;
 
         //document.addEventListener("deviceready", function () {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -23,10 +24,13 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
          */
         AppReady.ready().then(function () {
             DB.initDB().then(function () {
+                q.resolve();
                 Logger.log("initDB promise resolved, dbReady resolved");
             }, function (err) {
+                q.reject();
                 Logger.log("App.js Fehler:", err);
             });
+
         });
 
 

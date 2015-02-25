@@ -13,6 +13,12 @@
                             "count": 1
                         }
                     ],
+                    "QuartzCore.framework": [
+                        {
+                            "xml": "false",
+                            "count": 1
+                        }
+                    ],
                     "CoreLocation.framework": [
                         {
                             "xml": "false",
@@ -29,14 +35,6 @@
                             "count": 1
                         },
                         {
-                            "xml": "<feature name=\"Console\"><param name=\"ios-package\" value=\"CDVLogger\" /></feature>",
-                            "count": 1
-                        },
-                        {
-                            "xml": "<feature name=\"Geolocation\"><param name=\"ios-package\" value=\"CDVLocation\" /></feature>",
-                            "count": 1
-                        },
-                        {
                             "xml": "<feature name=\"Device\"><param name=\"ios-package\" value=\"CDVDevice\" /></feature>",
                             "count": 1
                         },
@@ -46,6 +44,18 @@
                         },
                         {
                             "xml": "<feature name=\"SpinnerPlugin\"><param name=\"ios-package\" value=\"SpinnerPlugin\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Toast\"><param name=\"ios-package\" value=\"Toast\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Console\"><param name=\"ios-package\" value=\"CDVLogger\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Geolocation\"><param name=\"ios-package\" value=\"CDVLocation\" /></feature>",
                             "count": 1
                         }
                     ]
@@ -67,16 +77,19 @@
         "com.brodysoft.sqlitePlugin": {
             "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
         },
-        "org.apache.cordova.console": {
-            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
-        },
-        "org.apache.cordova.geolocation": {
-            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
-        },
         "de.appplant.cordova.plugin.local-notification": {
             "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
         },
         "it.mobimentum.phonegapspinnerplugin": {
+            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
+        },
+        "nl.x-services.plugins.toast": {
+            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
+        },
+        "org.apache.cordova.console": {
+            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
+        },
+        "org.apache.cordova.geolocation": {
             "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
         }
     },
