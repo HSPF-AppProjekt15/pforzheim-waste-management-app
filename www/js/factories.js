@@ -380,11 +380,12 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
         return q.promise;
     };
 
-    var addNotifications = function (dates,idStart,message,title) {
+    var addNotifications = function (dates,idStart,message,title,$scope) {
         hasPermission().then(function () {
             Logger.log(dates);
             var id = idStart;
             for (var i = 0; i < dates.length; i++) {
+                Logger.log("adding: ", id);
                 var msecPerDay = 24 * 60 * 60 * 1000,
                     date = dates[i] + "T17:00:00",
                     today = new Date(date),
@@ -395,8 +396,8 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
                     date: yesterday,
                     message: message,
                     title: title
-                }).then(function () {
-                    Logger.log('added notification: ' + id);
+                }, $scope).then(function () {
+                    Logger.log('added notification');
                 });
                 id++;
             }
@@ -405,63 +406,60 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
         });
     };
 
-    var cancelNotifications = function(idStart) {
-        $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
-            for (var i = 0; i < scheduledIds; i++) {
+    var cancelNotifications = function(idStart, $scope) {
+        $cordovaLocalNotification.getScheduledIds($scope).then(function (scheduledIds) {
+            for (var i = 0; i < scheduledIds.length; i++) {
                 if (scheduledIds[i] >= idStart && scheduledIds[i] < idStart+1000) {
                     $cordovaLocalNotification.cancel(scheduledIds[i]).then(function () {
-                        Logger.log('callback for cancellation background notification');
+                        Logger.log('background notification cancelled');
                     });
                 }
             }
         });
     };
 
-    var addNotificationForType = function (type,dates) {
+    var addNotificationForType = function (type,dates,$scope) {
         switch (type) {
             case "Bio":
-                addNotifications(dates,1000,"Morgen ist Biomüll.","Biotonne");
+                addNotifications(dates,1000,"Morgen ist Biomüll.","Biotonne", $scope);
                 break;
             case "Gelb":
-                addNotifications(dates,2000,"Morgen ist gelbe Tonne.","Gelbe Tonne");
+                addNotifications(dates,2000,"Morgen ist gelbe Tonne.","Gelbe Tonne",$scope);
                 break;
             case "Papier":
-                addNotifications(dates,3000,"Morgen ist Papiermüll.","Papiermüll");
+                addNotifications(dates,3000,"Morgen ist Papiermüll.","Papiermüll",$scope);
                 break;
             case "RM":
-                addNotifications(dates,4000,"Morgen ist wöchentlicher Restmüll.","Wöchentlicher Restmüll");
+                addNotifications(dates,4000,"Morgen ist wöchentlicher Restmüll.","Wöchentlicher Restmüll",$scope);
                 break;
             case "RM14":
-                addNotifications(dates,5000,"Morgen ist 14-tägiger Restmüll.","14-tägiger Restmüll");
+                addNotifications(dates,5000,"Morgen ist 14-tägiger Restmüll.","14-tägiger Restmüll",$scope);
                 break;
         }
     };
-    var cancelNotificationForType = function (type) {
+
+    var cancelNotificationForType = function (type, $scope) {
         switch (type) {
             case "Bio":
-                cancelNotifications(1000);
+                cancelNotifications(1000, $scope);
                 break;
             case "Gelb":
-                cancelNotifications(2000);
+                cancelNotifications(2000, $scope);
                 break;
             case "Papier":
-                cancelNotifications(3000);
+                cancelNotifications(3000, $scope);
                 break;
             case "RM":
-                cancelNotifications(4000);
+                cancelNotifications(4000, $scope);
                 break;
             case "RM14":
-                cancelNotifications(5000);
+                cancelNotifications(5000, $scope);
                 break;
         }
-
     };
-
-
 
     return {
         addNotificationForType: addNotificationForType,
         cancelNotificationForType:cancelNotificationForType
-
    }
 });
