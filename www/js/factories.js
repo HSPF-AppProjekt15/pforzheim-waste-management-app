@@ -380,7 +380,7 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
         return q.promise;
     };
 
-    var addNotifications = function (dates,idStart,message,title,$scope) {
+    var addNotifications = function (dates,idStart,message,title,$scope,$timeout) {
         hasPermission().then(function () {
             Logger.log(dates);
             var id = idStart;
@@ -404,6 +404,11 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
         },function()   {
             Logger.log("addNotifications has no permission");
         });
+        $timeout(function () {
+            window.plugin.notification.local.getScheduledIds(function (scheduledIds) {
+                Logger.log('Scheduled IDs: ' + scheduledIds.join(' ,'));
+            });
+        },4000);
     };
 
     var cancelNotifications = function(idStart, $scope) {
