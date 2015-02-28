@@ -468,3 +468,26 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
         cancelNotificationForType:cancelNotificationForType
    }
 });
+
+pfAppF.factory('InitValueLoader', function (localStorageService) {
+
+    var stringToBoolean = function (string) {
+        switch (string) {
+            case "true":
+                return true;
+            case "false":
+                return false;
+            default:
+                return false;
+        }
+    };
+
+    var load = function(type) {
+        var value = localStorageService.get(type);
+        return stringToBoolean(value);
+    };
+
+    return {
+        load: load
+    }
+});

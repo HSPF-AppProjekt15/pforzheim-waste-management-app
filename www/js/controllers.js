@@ -6,7 +6,7 @@ var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 var application;
 application = angular.module('app.controllers', [])
 
-    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, $cordovaLocalNotification, Logger, $timeout, Notifications) {
+    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, $cordovaLocalNotification, Logger, $timeout, Notifications, InitValueLoader) {
         $scope.query = {
             "street": "",
             "hnr": ""
@@ -22,12 +22,12 @@ application = angular.module('app.controllers', [])
         $scope.streetSuggestions = [];
         $scope.searchBtn = false;
 
-        $scope.notifications = stringToBoolean(localStorageService.get("notifications"));
-        $scope.pushBio = stringToBoolean(localStorageService.get("Bio"));
-        $scope.pushGelb = stringToBoolean(localStorageService.get("Gelb"));
-        $scope.pushPapier = stringToBoolean(localStorageService.get("Papier"));
-        $scope.pushRM = stringToBoolean(localStorageService.get("RM"));
-        $scope.pushRM14 = stringToBoolean(localStorageService.get("RM14"));
+        $scope.notifications = InitValueLoader.load("notifications");
+        $scope.pushBio = InitValueLoader.load("Bio");
+        $scope.pushGelb = InitValueLoader.load("Gelb");
+        $scope.pushPapier = InitValueLoader.load("Papier");
+        $scope.pushRM = InitValueLoader.load("RM");
+        $scope.pushRM14 = InitValueLoader.load("RM14");
 
         // Private Methods
         function log(msg) {
@@ -138,17 +138,6 @@ application = angular.module('app.controllers', [])
                 $scope.query.street = localStorageService.get('street');
                 $scope.query.hnr = parseInt(localStorageService.get('hnr'));
                 loadDatesForCurrentStreet();
-            }
-        }
-
-        function stringToBoolean(string) {
-            switch (string) {
-                case "true":
-                    return true;
-                case "false":
-                    return false;
-                default:
-                    return false;
             }
         }
 
