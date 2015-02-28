@@ -345,7 +345,7 @@ pfAppF.factory('Logger', function ($log) {
     }
 });
 
-pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,AppReady) {
+pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,AppReady,$timeout) {
 
     var hasPermission = function () {
         var q= $q.defer();
@@ -380,7 +380,7 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
         return q.promise;
     };
 
-    var addNotifications = function (dates,idStart,message,title,$scope,$timeout) {
+    var addNotifications = function (dates,idStart,message,title,$scope) {
         hasPermission().then(function () {
             Logger.log(dates);
             var id = idStart;
