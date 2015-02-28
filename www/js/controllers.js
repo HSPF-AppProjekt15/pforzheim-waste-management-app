@@ -22,12 +22,12 @@ application = angular.module('app.controllers', [])
         $scope.streetSuggestions = [];
         $scope.searchBtn = false;
 
-        $scope.notifications = typeof localStorageService.get("notifications") !== 'object' ? localStorageService.get("notifications") : false;
-        $scope.pushBio = typeof localStorageService.get("Bio") !== 'object' ? localStorageService.get("Bio") : false;
-        $scope.pushGelb = typeof localStorageService.get("Gelb") !== 'object' ? localStorageService.get("Gelb") : false;
-        $scope.pushPapier = typeof localStorageService.get("Papier") !== 'object' ? localStorageService.get("Papier") : false;
-        $scope.pushRM = typeof localStorageService.get("RM") !== 'object' ? localStorageService.get("RM") : false;
-        $scope.pushRM14 = typeof localStorageService.get("RM14") !== 'object' ? localStorageService.get("RM14") : false;
+        $scope.notifications = stringToBoolean(localStorageService.get("notifications"));
+        $scope.pushBio = stringToBoolean(localStorageService.get("Bio"));
+        $scope.pushGelb = stringToBoolean(localStorageService.get("Gelb"));
+        $scope.pushPapier = stringToBoolean(localStorageService.get("Papier"));
+        $scope.pushRM = stringToBoolean(localStorageService.get("RM"));
+        $scope.pushRM14 = stringToBoolean(localStorageService.get("RM14"));
 
         // Private Methods
         function log(msg) {
@@ -138,6 +138,17 @@ application = angular.module('app.controllers', [])
                 $scope.query.street = localStorageService.get('street');
                 $scope.query.hnr = parseInt(localStorageService.get('hnr'));
                 loadDatesForCurrentStreet();
+            }
+        }
+
+        function stringToBoolean(string) {
+            switch (string) {
+                case "true":
+                    return true;
+                case "false":
+                    return false;
+                default:
+                    return false;
             }
         }
 
@@ -294,36 +305,36 @@ application = angular.module('app.controllers', [])
 
         $scope.$watch('pushBio', function (newValue, oldValue) {
             // Check if value has changes and set notifications
-            if(newValue!==oldValue) {
-                setNotifications(newValue,"Bio");
+            if (newValue !== oldValue) {
+                setNotifications(newValue, "Bio");
             }
         }, true);
 
         $scope.$watch('pushGelb', function (newValue, oldValue) {
             // Check if value has changes and set notifications
-            if(newValue!==oldValue) {
-                setNotifications(newValue,"Gelb");
+            if (newValue !== oldValue) {
+                setNotifications(newValue, "Gelb");
             }
         }, true);
 
         $scope.$watch('pushPapier', function (newValue, oldValue) {
             // Check if value has changes and set notifications
-            if(newValue!==oldValue) {
-                setNotifications(newValue,"Papier");
+            if (newValue !== oldValue) {
+                setNotifications(newValue, "Papier");
             }
         }, true);
 
         $scope.$watch('pushRM', function (newValue, oldValue) {
             // Check if value has changes and set notifications
-            if(newValue!==oldValue) {
-                setNotifications(newValue,"RM");
+            if (newValue !== oldValue) {
+                setNotifications(newValue, "RM");
             }
         }, true);
 
         $scope.$watch('pushRM14', function (newValue, oldValue) {
             // Check if value has changes and set notifications
-            if(newValue!==oldValue) {
-                setNotifications(newValue,"RM14");
+            if (newValue !== oldValue) {
+                setNotifications(newValue, "RM14");
             }
         }, true);
 
