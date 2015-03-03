@@ -12,16 +12,6 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
         var q = $q.defer();
         $rootScope.dbReady = q.promise;
 
-        //document.addEventListener("deviceready", function () {
-        // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
-        // for form inputs)
-        /*if(window.cordova && window.cordova.plugins.Keyboard) {
-         cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-         }
-         if(window.StatusBar) {
-         StatusBar.styleDefault();
-         }
-         */
         AppReady.ready().then(function () {
             DB.initDB().then(function () {
                 q.resolve();
@@ -32,9 +22,4 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
             });
 
         });
-
-
-
-        //}, false);
-
     });
