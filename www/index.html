@@ -9,19 +9,17 @@
           content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, target-densitydpi=device-dpi"/>
     <title>Pforzheim Abfall-Abfuhrkalender</title>
 
-    <!--<link href="css/bootstrap.min.css" rel="stylesheet">-->
     <link href="lib/mobile-angular-ui/css/mobile-angular-ui-base.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
-    <script type="text/javascript" src="lib/angular.min.js"></script>
-    <script type="text/javascript" src="lib/mobile-angular-ui/angular-route.min.js"></script>
-    <script type="text/javascript" src="lib/ngCordova/dist/ng-cordova.js"></script>
+    <script type="text/javascript" src="lib/angularjs/angular.min.js"></script>
+    <script type="text/javascript" src="lib/angularjs/angular-route.min.js"></script>
+    <script type="text/javascript" src="lib/ngCordova/ng-cordova.js"></script>
 
-    <!--<script type="text/javascript" src="lib/ui-bootstrap-tpls-0.12.0.min.js"></script>-->
     <script type="text/javascript" src="lib/mobile-angular-ui/js/mobile-angular-ui.core.min.js"></script>
-    <!-- <script type="text/javascript" src="lib/mobile-angular-ui/js/mobile-angular-ui.gestures.js"></script>-->
     <script type="text/javascript" src="lib/mobile-angular-ui/js/mobile-angular-ui.min.js"></script>
-    <script type="text/javascript" src="lib/angular-local-storage.min.js"></script>
+
+    <script type="text/javascript" src="lib/angularjs-module/angular-local-storage.min.js"></script>
 
     <script type="text/javascript" src="cordova.js"></script>
 
@@ -33,17 +31,7 @@
 
 <body ng-app="starter" id="extraPaddingToShowAllContent">
 
-<!--    Header  -->
-<!--<nav class="navbar navbar-default navbar-fixed-top">
-    <div class="container-fluid">
-        <div class="navbar-header">
-
-            <img class="navbar-brand" alt="Brand" src="img/Wappen_Pforzheim.png">
-            <h3 class="navbar-text">Pforzheim Abfuhrkalender</h3>
-        </div>
-    </div>
-</nav>-->
-
+<!--Header-->
 <div class="navbar navbar-app navbar-absolute-top">
     <img class="navbar-brand navbar-brand-left" alt="Brand" src="img/Wappen_Pforzheim.png">
     <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
@@ -73,6 +61,7 @@
     </div>
 </div>
 
+<!--Body-->
 <div class="app-body">
     <div class="app-content">
         <div class="scrollable">
@@ -88,12 +77,6 @@
                             <div class="panel-footer">
                                 <div class="row">
                                     <div class="form-group col-xs-9">
-                                        <!--<input type="text" class="form-control" placeholder="Straßenname"
-                                               ng-model="query.street" ng-keydown="checkKeyDown($event)"
-                                               ng-change="getStreets(query.street, query.hnr)"
-                                               typeahead="street for street in streetSuggestions | filter:$viewValue | limitTo:5"
-                                               typeahead-wait-ms="150" typeahead-focus-first="false"
-                                               id="searchInputStrasse"/>-->
                                         <input type="text" class="form-control" placeholder="Straßenname"
                                                ng-model="query.street" ng-keydown="checkKeyDown($event)"
                                                ng-change="getStreets(query.street, query.hnr)"
@@ -140,7 +123,6 @@
                                         </td>
                                     </tr>
                                 </table>
-                                <!--<button class="btn btn-primary btn-xs col-xs-6 col-xs-offset-3" ng-click="open()">Legende</button>-->
                                 <a href=""
                                    ui-turn-on="legende"
                                    class="btn btn-primary btn-xs col-xs-6 col-xs-offset-3">Legende</a>
@@ -163,10 +145,6 @@
                                         Push-Benachrichtigung
                                     </div>
                                     <div class="col-xs-5">
-                                        <!--<div class="btn-group pull-right">
-                                            <label class="btn btn-primary" ng-model="notifications" btn-radio="0">Aus</label>
-                                            <label class="btn btn-primary" ng-model="notifications" btn-radio="1">An</label>
-                                        </div>-->
                                         <ui-switch class="pull-right"
                                                    ng-model='notifications'>
                                         </ui-switch>
@@ -189,12 +167,6 @@
                                                 Biotonne
                                             </td>
                                             <td class="vert-align noBorder">
-                                                <!-- <div class="btn-group pull-right">
-                                                     <label class="btn btn-primary" ng-model="pushBio"
-                                                            btn-radio="0">Aus</label>
-                                                     <label class="btn btn-primary" ng-model="pushBio"
-                                                            btn-radio="1">An</label>
-                                                 </div>-->
                                                 <ui-switch class="pull-right"
                                                            ng-model='pushBio'>
                                                 </ui-switch>
@@ -209,12 +181,6 @@
                                                 Gelbe Tonne
                                             </td>
                                             <td class="vert-align noBorder">
-                                                <!--<div class="btn-group pull-right">
-                                                    <label class="btn btn-primary" ng-model="pushGelb"
-                                                           btn-radio="0">Aus</label>
-                                                    <label class="btn btn-primary" ng-model="pushGelb"
-                                                           btn-radio="1">An</label>
-                                                </div>-->
                                                 <ui-switch class="pull-right"
                                                            ng-model='pushGelb'>
                                                 </ui-switch>
@@ -229,10 +195,6 @@
                                                 Papiertonne
                                             </td>
                                             <td class="vert-align noBorder">
-                                                <!--<div class="btn-group pull-right">
-                                                    <label class="btn btn-primary" ng-model="pushPapier" btn-radio="0">Aus</label>
-                                                    <label class="btn btn-primary" ng-model="pushPapier" btn-radio="1">An</label>
-                                                </div>-->
                                                 <ui-switch class="pull-right"
                                                            ng-model='pushPapier'>
                                                 </ui-switch>
@@ -247,12 +209,6 @@
                                                 Restmüll 7-tägig
                                             </td>
                                             <td class="vert-align noBorder">
-                                                <!--<div class="btn-group pull-right">
-                                                    <label class="btn btn-primary" ng-model="pushRM"
-                                                           btn-radio="0">Aus</label>
-                                                    <label class="btn btn-primary" ng-model="pushRM"
-                                                           btn-radio="1">An</label>
-                                                </div>-->
                                                 <ui-switch class="pull-right"
                                                            ng-model='pushRM'>
                                                 </ui-switch>
@@ -267,12 +223,6 @@
                                                 Restmüll 14-tägig
                                             </td>
                                             <td class="vert-align noBorder">
-                                                <!-- <div class="btn-group pull-right">
-                                                     <label class="btn btn-primary" ng-model="pushRM14"
-                                                            btn-radio="0">Aus</label>
-                                                     <label class="btn btn-primary" ng-model="pushRM14"
-                                                            btn-radio="1">An</label>
-                                                 </div>-->
                                                 <ui-switch class="pull-right"
                                                            ng-model='pushRM14'>
                                                 </ui-switch>
