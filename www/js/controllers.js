@@ -6,7 +6,7 @@ var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 var application;
 application = angular.module('app.controllers', [])
 
-    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, $cordovaLocalNotification, Logger, $timeout, Notifications, InitValueLoader) {
+    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, Logger, $timeout, Notifications, InitValueLoader) {
         $scope.query = {
             "street": "",
             "hnr": ""
