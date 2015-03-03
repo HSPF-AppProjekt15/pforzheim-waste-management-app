@@ -49,6 +49,28 @@
     <div class="navbar-brand navbar-brand-center" ui-yield-to="title">
         Pforzheim Abfuhrkalender
     </div>
+    <div class="btn-group pull-right">
+        <a ui-turn-on='myDropdown' class='btn'>
+            <i class="fa fa-ellipsis-v"></i>
+        </a>
+        <ul
+                ui-state="myDropdown"
+                class="dropdown-menu"
+                ui-outer-click="Ui.turnOff('myDropdown')"
+                ui-outer-click-if="Ui.active('myDropdown')"
+                role="menu"
+                ui-show="myDropdown"
+                ui-turn-off="myDropdown">
+            <li>
+                <a href=""
+                   ui-turn-on="datenschutz">Datenschutzerklärung</a>
+            </li>
+            <li>
+                <a href=""
+                   ui-turn-on="impressum">Impressum</a>
+            </li>
+        </ul>
+    </div>
 </div>
 
 <div class="app-body">
@@ -270,6 +292,8 @@
 <div ui-yield-to="modals"></div>
 <div ui-content-for="modals">
     <div ng-include="'legende.html'"></div>
+    <div ng-include="'datenschutz.html'"></div>
+    <div ng-include="'impressum.html'"></div>
 </div>
 </body>
 
