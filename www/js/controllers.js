@@ -147,12 +147,9 @@ application = angular.module('app.controllers', [])
         $scope.getDates = function () {
             LoadingSpinner.show();
 
-            $scope.pushBio = false;
-            $scope.pushGelb = false;
-            $scope.pushPapier = false;
-            $scope.pushRM = false;
-            $scope.pushRM14 = false;
+            $scope.notifications = false;
             $scope.showDates = false;
+
             var dates = [];
             log("getDates Sende Straße und Hausnummer: " + $scope.query.street + " " + $scope.query.hnr);
             $http.get(pwm_url + '?strasse=' + $scope.query.street + '&hnr=' + $scope.query.hnr).
