@@ -275,6 +275,9 @@ application = angular.module('app.controllers', [])
             // To do: register next push
             localStorageService.set("notifications", newValue);
             if (newValue === true) {
+				if (window.spinnerplugin) {
+					window.plugins.toast.showLongTop("Sie werden einen Tag vor der Leerung erinnert");
+				}
                 $scope.pushBio = true;
                 $scope.pushGelb = true;
                 $scope.pushPapier = true;
