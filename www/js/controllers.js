@@ -284,6 +284,9 @@ application = angular.module('app.controllers', [])
                 $scope.pushRM = true;
                 $scope.pushRM14 = true;
             } else {
+                if(!LoadingSpinner.isActive()) {
+                    window.plugins.toast.showLongTop("Sie werden nicht mehr erinnert");
+                }
                 $scope.pushBio = false;
                 $scope.pushGelb = false;
                 $scope.pushPapier = false;
