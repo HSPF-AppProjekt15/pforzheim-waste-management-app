@@ -51,6 +51,10 @@
                 ui-turn-off="myDropdown">
             <li>
                 <a href=""
+                   ui-turn-on="faq">FAQ</a>
+            </li>
+            <li>
+                <a href=""
                    ui-turn-on="datenschutz">Datenschutzerklärung</a>
             </li>
             <li>
@@ -72,7 +76,7 @@
                         <!--Eingabefelder-->
                         <div class="panel panel-default noMargin">
                             <div class="panel-body">
-                                Bitte Straße angeben, um den Abfall-Abfuhrkalender anzuzeigen.
+                                Bitte Straße und Hausnummer angeben, um den Abfall-Abfuhrkalender anzuzeigen.
                             </div>
                             <div class="panel-footer">
                                 <div class="row">
@@ -244,6 +248,7 @@
     <div ng-include="'legende.html'"></div>
     <div ng-include="'datenschutz.html'"></div>
     <div ng-include="'impressum.html'"></div>
+    <div ng-include="'faq.html'"></div>
 </div>
 </body>
 

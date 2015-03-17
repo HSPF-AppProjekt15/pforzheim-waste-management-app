@@ -1,0 +1,34 @@
+<div class="modal modal-overlay" ui-if='faq' ui-state='faq'>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close"
+                        ui-turn-off="faq">&times;</button>
+                <h4 class="modal-title">FAQ</h4>
+            </div>
+            <div class="modal-body">
+                <h3>Was passiert bei Aktivierung der Push-Benachrichtigung?</h3>
+                <p>Durch die Aktivierung der Push-Benachrichtigung erhalten Sie am Tag vor der Leerung eine Erinnerung auf Ihrem Handy angezeigt.</p>
+
+                <h3>Was bewirken die letzten fünf Schalter?</h3>
+                <p>Durch die unteren Schalter können Sie sich die Benachrichtigungen individuell konfigurieren. Möchten Sie z.B. keine Benachrichtigung für Biomüll erhalten so können Sie diese durch einen Klick auf den Schalter neben dem Schriftzug "Biotonne" deaktivieren.</p>
+
+                <h3>Wieso muss ich meine Straße und meine Hausnummer angeben?</h3>
+                <p>Diese Daten sind notwendig damit wir Ihnen ihren persönlichen Abfall-Abfuhrkalender zur Verfügung stellen können.</p>
+
+                <h3>Wieso kann mein Standort nicht lokalisiert werden?</h3>
+                <p>Stellen Sie sicher, dass ihr Handy eine stabile Internetverbindung hat und die Standortdienste an Ihrem Handy aktiviert sind.</p>
+
+                <h3>Warum wird mein Standort nicht richtig erkannt?</h3>
+                <p>Die korrekte Ermittlung Ihres Standorts ist von vielen Faktoren abhängig. Leider können wir diese nicht beeinflussen.</p>
+
+                <h3>Nach der Lokalisierung erhalte ich die Meldung "Es konnten keine Daten zur angegebenen Adresse gefunden werden". Was soll ich tun?</h3>
+                <p>In wenigen Fällen kann es passieren, dass in der Datenbank für Ihre Adresse keine Abfuhrtermine vorhanden sind. Geben Sie in diesem Fall eine andere Hausnummer ein und klicken Sie anschließend auf "Suchen".</p>
+
+            </div>
+            <div class="modal-footer">
+                <button ui-turn-off="faq" class="btn btn-default">Schließen</button>
+            </div>
+        </div>
+    </div>
+</div>
