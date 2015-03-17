@@ -5,10 +5,10 @@
 	},
 	{
 		"question": "Was bewirken die letzten fünf Schalter?",
-		"answer": "Durch die unteren Schalter können Sie sich die Benachrichtigungen individuell konfigurieren. Möchten Sie z.B. keine Benachrichtigung für Biomüll erhalten so können Sie diese durch einen Klick auf den Schalter neben dem Schriftzug \"Biotonne\" deaktivieren."
+		"answer": "Durch die unteren fünf Schalter können Sie sich die Benachrichtigungen individuell konfigurieren. Möchten Sie z.B. keine Benachrichtigung für Biomüll erhalten so können Sie diese durch einen Klick auf den Schalter neben dem Schriftzug \"Biotonne\" deaktivieren."
 	},
 	{
-		"question": "Wieso muss ich meine Straß und meine Hausnummer angeben?",
+		"question": "Wieso muss ich meine Straße und meine Hausnummer angeben?",
 		"answer": "Diese Daten sind notwendig damit wir Ihnen ihren persönlichen Abfall-Abfuhrkalender zur Verfügung stellen können."
 	},
 	{
@@ -17,10 +17,10 @@
 	},
 	{
 		"question": "Warum wird mein Standort nicht richtig erkannt?",
-		"answer": "Die korrekte Ermittlung Ihres Standorts ist von vielen Faktoren abhäig. Leider können wir diese nicht beeinflussen."
+		"answer": "Die korrekte Ermittlung Ihres Standorts ist von vielen Faktoren abhängig. Leider können wir diese nicht beeinflussen."
 	},
 	{
 		"question": "Nach der Lokalisierung erhalte ich die Meldung \"Es konnten keine Daten zur angegebenen Adresse gefunden werden\". Was soll ich tun?",
-		"answer": "In wenigen Füen kann es passieren, dass in der Datenbank für Ihre Adresse keine Abfuhrtermine vorhanden sind. Geben Sie in diesem Fall eine andere Hausnummer ein und klicken Sie anschließnd auf \"Suchen\"."
+		"answer": "In wenigen Fällen kann es passieren, dass in der Datenbank für Ihre Adresse keine Abfuhrtermine vorhanden sind. Geben Sie in diesem Fall eine andere Hausnummer ein und klicken Sie anschließnd auf \"Suchen\"."
 	}
 ]
