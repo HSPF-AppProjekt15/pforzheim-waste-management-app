@@ -6,7 +6,7 @@ var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 var application;
 application = angular.module('app.controllers', [])
 
-    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, Logger, $timeout, Notifications, InitValueLoader) {
+    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, Logger, $timeout, Notifications, InitValueLoader, $window) {
         $scope.query = {
             "street": "",
             "hnr": ""
@@ -21,6 +21,9 @@ application = angular.module('app.controllers', [])
         $scope.showDates = false;
         $scope.streetSuggestions = [];
         $scope.searchBtn = false;
+
+        $scope.popupHeight = $window.innerHeight - 130 + "px"; // Body Height des FAQ
+        $scope.faqs = [];
 
         $scope.notifications = InitValueLoader.load("notifications");
         $scope.pushBio = InitValueLoader.load("Bio");
@@ -139,6 +142,9 @@ application = angular.module('app.controllers', [])
                 $scope.query.hnr = parseInt(localStorageService.get('hnr'));
                 loadDatesForCurrentStreet();
             }
+            $http.get('faq.json').success(function (data) {
+                $scope.faqs = data;
+            });
         }
 
         // Public Methods
