@@ -77,14 +77,14 @@ application = angular.module('app.controllers', [])
                 } else {
                     $scope.showDates = false;
                     log("loadDatesForCurrentStreet: no result");
-                    LoadingSpinner.hide();
-                    if (window.spinnerplugin) {
+                    if (LoadingSpinner.isAvailable()) {
                         window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
                     }
                 }
                 LoadingSpinner.hide();
             }, function (err) {
-                log(err)
+                log(err);
+                LoadingSpinner.hide();
             })
         }
 
@@ -189,14 +189,14 @@ application = angular.module('app.controllers', [])
                     }, function (err) {
                         log(err);
                     });
-
+                    LoadingSpinner.hide();
                 }).
                 error(function (data, status, headers, config) {
                     log("getDates Fehler", data);
                     $scope.showDates = false;
 
                     LoadingSpinner.hide();
-                    if (window.spinnerplugin) {
+                    if (LoadingSpinner.isAvailable()) {
                         window.plugins.toast.showLongTop("Es konnte keine Verbindung aufgebaut werden,\nstellen sie eine Internetverbindung her");
                     }
                 });
@@ -240,13 +240,14 @@ application = angular.module('app.controllers', [])
                         searchForStreetName(address).then(function (result) {
                             $scope.query.street = result.street;
                             $scope.query.hnr = result.number;
+                            LoadingSpinner.hide();
                             $scope.getDates();
                         }, function (err) {
                             log(err);
                             // TODO: wenn Straße nicht in DB ist, Error anzeigen
                             log("getStreetFromLocation: Straße nicht in PF gefunden: " + address.street);
                             LoadingSpinner.hide();
-                            if (window.spinnerplugin) {
+                            if (LoadingSpinner.isAvailable()) {
                                 window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
                             }
                         })
@@ -256,7 +257,7 @@ application = angular.module('app.controllers', [])
                 function (err) {
                     $scope.showDates = false;
                     LoadingSpinner.hide();
-                    if (window.spinnerplugin) {
+                    if (LoadingSpinner.isAvailable()) {
                         window.plugins.toast.showLongTop("Es konnte kein GPS Signal gefunden werden\nMöglicherweise ist ihr GPS oder Internetverbindung deaktiviert");
                     }
                 });
@@ -281,7 +282,7 @@ application = angular.module('app.controllers', [])
             // To do: register next push
             localStorageService.set("notifications", newValue);
             if (newValue === true) {
-				if (window.spinnerplugin) {
+				if (LoadingSpinner.isAvailable()) {
 					window.plugins.toast.showLongTop("Sie werden einen Tag vor der Leerung erinnert");
 				}
                 $scope.pushBio = true;

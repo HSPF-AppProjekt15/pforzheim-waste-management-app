@@ -52,7 +52,6 @@
 
 	<gap:plugin name="com.brodysoft.sqlitePlugin" version="1.0.4" />
 	<gap:plugin name="nl.x-services.plugins.toast" version="1.0" />
-	<gap:plugin name="it.mobimentum.phonegapspinnerplugin" version="1.0.0"/>
 
 	
     <icon src="icon.png" />

@@ -300,7 +300,7 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
         console.log("Spinnerplugin show");
         if(isAvailable()) {
             try {
-                spinner_.show();
+                spinner_.show(null, null, true);
                 _isActive = true;
             }
             catch (err) {
@@ -319,20 +319,21 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
         return _isActive;
     };
     function isAvailable() {
-        return (typeof window.spinnerplugin !== "undefined");
+        return (typeof window.plugins.spinnerDialog !== "undefined");
     }
 
 
     AppReady.ready().then(function () {
             if(isAvailable()) {
-                spinner_=window.spinnerplugin;
+                spinner_=window.plugins.spinnerDialog;
             }
         }
     );
     return {
         show: show,
         hide: hide,
-        isActive: isActive
+        isActive: isActive,
+        isAvailable: isAvailable
     }
 });
 
