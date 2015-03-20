@@ -1,0 +1,26 @@
+<div class="modal modal-overlay" ui-if='faq' ui-state='faq'>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close"
+                        ui-turn-off="faq">&times;</button>
+                <h4 class="modal-title">FAQ</h4>
+            </div>
+            <div class="modal-body" style="height: {{ popupHeight }}">
+                <div class="scrollable">
+                    <div class="scrollable-content">
+
+                        <div ng-repeat="faq in faqs">
+                            <h4 class="faqQuestionPadding">{{faq.question}}</h4>
+                            <p>{{faq.answer}}</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button ui-turn-off="faq" class="btn btn-default">Schließen</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -292,13 +292,16 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) 
     };
 });
 pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
-    var spinner_;
+    var spinner_,
+        _isActive = false;
+
     var show = function () {
         //spinnerplugin.show();
         console.log("Spinnerplugin show");
         if(isAvailable()) {
             try {
-                spinner_.show();
+                spinner_.show(null, null, true);
+                _isActive = true;
             }
             catch (err) {
                 Logger.log(err);
@@ -308,22 +311,29 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
     var hide = function () {
         if(isAvailable()) {
             spinner_.hide();
+            _isActive = false;
         }
     };
+
+    var isActive = function() {
+        return _isActive;
+    };
     function isAvailable() {
-        return (typeof window.spinnerplugin !== "undefined");
+        return (typeof window.plugins.spinnerDialog !== "undefined");
     }
 
 
     AppReady.ready().then(function () {
             if(isAvailable()) {
-                spinner_=window.spinnerplugin;
+                spinner_=window.plugins.spinnerDialog;
             }
         }
     );
     return {
         show: show,
-        hide: hide
+        hide: hide,
+        isActive: isActive,
+        isAvailable: isAvailable
     }
 });
 
@@ -491,3 +501,4 @@ pfAppF.factory('InitValueLoader', function (localStorageService) {
         load: load
     }
 });
+
