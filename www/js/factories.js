@@ -319,6 +319,9 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
         return _isActive;
     };
     function isAvailable() {
+        if(!window.plugins) {
+            return false;
+        }
         return (typeof window.plugins.spinnerDialog !== "undefined");
     }
 
