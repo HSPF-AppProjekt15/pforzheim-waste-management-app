@@ -61,3 +61,7 @@
 .faqQuestionPadding {
     padding-top: 2rem;
 }
+/* Fix WP8 scrolling */
+body, html {
+    -ms-overflow-style: none !important;
+}
