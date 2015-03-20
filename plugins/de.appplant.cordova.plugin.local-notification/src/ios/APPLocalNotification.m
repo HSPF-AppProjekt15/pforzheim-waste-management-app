@@ -1,54 +1,83 @@
 /*
- * Copyright (c) 2013-2015 by appPlant UG. All rights reserved.
- *
- * @APPPLANT_LICENSE_HEADER_START@
- *
- * This file contains Original Code and/or Modifications of Original Code
- * as defined in and that are subject to the Apache License
- * Version 2.0 (the 'License'). You may not use this file except in
- * compliance with the License. Please obtain a copy of the License at
- * http://opensource.org/licenses/Apache-2.0/ and read it before using this
- * file.
- *
- * The Original Code and all software distributed under the License are
- * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
- * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
- * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
- * Please see the License for the specific language governing rights and
- * limitations under the License.
- *
- * @APPPLANT_LICENSE_HEADER_END@
+ Copyright 2013-2014 appPlant UG
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
  */
 
 #import "APPLocalNotification.h"
-#import "APPLocalNotificationOptions.h"
-#import "AppDelegate+APPLocalNotification.h"
-#import "UIApplication+APPLocalNotification.h"
-#import "UILocalNotification+APPLocalNotification.h"
+#import <Cordova/CDVAvailability.h>
+
+@interface APPLocalNotification (Private)
+
+// Schedules a new local notification and fies the coresponding event
+- (void) scheduleNotificationWithProperties:(NSMutableDictionary*)properties;
+// Cancels the given local notification and fires the cancel event
+- (void) cancelNotification:(UILocalNotification*)notification fireEvent:(BOOL)fireEvent;
+// Cancels all local notification with are older then
+- (void) cancelAllNotificationsWhichAreOlderThen:(float)seconds;
+// Retrurns a key-value dictionary for repeat intervals
+- (NSMutableDictionary*) repeatDict;
+// Returns the userDict for a local notification
+- (NSDictionary*) userDict:(NSMutableDictionary*)options;
+// Creates an notification object based on the given properties
+- (UILocalNotification*) notificationWithProperties:(NSMutableDictionary*)options;
+// Calls the cancel or trigger event after a local notification was received
+- (void) didReceiveLocalNotification:(NSNotification*)localNotification;
+// Calls the cancel or trigger event after a local notification was received
+- (void) didFinishLaunchingWithOptions:(NSNotification*)notification;
+// Registers obervers for the following events after plugin was initialized.
+- (void) pluginInitialize;
+// Clears all single repeating notifications which are older then 5 days
+- (void) onAppTerminate;
+// Checks weather the given string is empty or not
+- (BOOL) stringIsNullOrEmpty:(NSString*)str;
+// Checks wether a notification with an ID is scheduled or not
+- (BOOL) isNotificationScheduledWithId:(NSString*)id;
+// Retrieves the local notification by its ID
+- (UILocalNotification*) notificationWithId:(NSString*)id;
+// Retrieves the application state
+- (NSString*) applicationState;
+// Retrieves all scheduled notifications
+- (NSArray*) scheduledNotifications;
+// Fires the given event
+- (void) fireEvent:(NSString*)event id:(NSString*)id json:(NSString*)json;
+
+@end
 
 @interface APPLocalNotification ()
 
+// Retrieves all scheduled notifications
+@property (readonly, getter=scheduledNotifications) NSArray* scheduledNotifications;
 // Retrieves the application state
 @property (readonly, getter=applicationState) NSString* applicationState;
 // All events will be queued until deviceready has been fired
 @property (readwrite, assign) BOOL deviceready;
 // Event queue
 @property (readonly, nonatomic, retain) NSMutableArray* eventQueue;
-// Needed when calling `registerPermission`
-@property (nonatomic, retain) CDVInvokedUrlCommand* command;
 
 @end
 
 @implementation APPLocalNotification
 
-@synthesize deviceready, eventQueue;
-
-#pragma mark -
-#pragma mark Interface
+@synthesize deviceready, eventQueue, applicationState, scheduledNotifications;
 
 /**
- * Execute all queued events.
+ * Executes all queued events.
  */
 - (void) deviceready:(CDVInvokedUrlCommand*)command
 {
@@ -62,198 +91,93 @@
 }
 
 /**
- * Schedule a set of notifications.
+ * Schedules a new local notification.
  *
- * @param properties
- *      A dict of properties for each notification
+ * @param {NSMutableDictionary} properties
+ *      The properties of the notification
  */
-- (void) schedule:(CDVInvokedUrlCommand*)command
+- (void) add:(CDVInvokedUrlCommand*)command
 {
-    NSArray* notifications = command.arguments;
-
     [self.commandDelegate runInBackground:^{
-        for (NSDictionary* options in notifications) {
-            UILocalNotification* notification;
+        NSArray* arguments = [command arguments];
+        NSMutableDictionary* properties = [arguments objectAtIndex:0];
 
-            notification = [[UILocalNotification alloc]
-                            initWithOptions:options];
+        UILocalNotification* notification;
+        NSString* id = [properties objectForKey:@"id"];
 
-            [self scheduleLocalNotification:[notification copy]];
-            [self fireEvent:@"schedule" notification:notification];
-
-            if (notifications.count > 1) {
-                [NSThread sleepForTimeInterval:0.01];
-            }
+        if ([self isNotificationScheduledWithId:id]) {
+            notification = [self notificationWithId:id];
         }
 
-        [self execCallback:command];
+        if (notification) {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.3 * NSEC_PER_SEC),
+                           dispatch_get_main_queue(), ^{
+                               [self cancelNotification:notification fireEvent:NO];
+                           });
+        }
+
+        [self scheduleNotificationWithProperties:properties];
     }];
 }
 
 /**
- * Update a set of notifications.
+ * Cancels a given local notification.
  *
- * @param properties
- *      A dict of properties for each notification
- */
-- (void) update:(CDVInvokedUrlCommand*)command
-{
-    NSArray* notifications = command.arguments;
-
-    [self.commandDelegate runInBackground:^{
-        for (NSDictionary* options in notifications) {
-            NSString* id = [options objectForKey:@"id"];
-            UILocalNotification* notification;
-
-            notification = [self.app localNotificationWithId:id];
-
-            if (!notification)
-                continue;
-
-            [self updateLocalNotification:[notification copy]
-                              withOptions:options];
-
-            [self fireEvent:@"update" notification:notification];
-
-            if (notifications.count > 1) {
-                [NSThread sleepForTimeInterval:0.01];
-            }
-        }
-
-        [self execCallback:command];
-    }];
-}
-
-/**
- * Cancel a set of notifications.
- *
- * @param ids
- *      The IDs of the notifications
+ * @param {NSString} id
+ *      The ID of the local notification
  */
 - (void) cancel:(CDVInvokedUrlCommand*)command
 {
     [self.commandDelegate runInBackground:^{
-        for (NSString* id in command.arguments) {
-            UILocalNotification* notification;
+        NSArray* arguments = [command arguments];
+        NSString* id       = [arguments objectAtIndex:0];
 
-            notification = [self.app localNotificationWithId:id];
+        UILocalNotification* notification = [self notificationWithId:id];
 
-            if (!notification)
-                continue;
-
-            [self.app cancelLocalNotification:notification];
-            [self fireEvent:@"cancel" notification:notification];
+        if (notification) {
+            [self cancelNotification:notification fireEvent:YES];
         }
-
-        [self execCallback:command];
     }];
 }
 
 /**
- * Cancel all local notifications.
+ * Cancels all currently scheduled notifications.
  */
 - (void) cancelAll:(CDVInvokedUrlCommand*)command
 {
     [self.commandDelegate runInBackground:^{
-        [self cancelAllLocalNotifications];
-        [self fireEvent:@"cancelall"];
-        [self execCallback:command];
-    }];
-}
+        NSArray* notifications = self.scheduledNotifications;
 
-/**
- * Clear a set of notifications.
- *
- * @param ids
- *      The IDs of the notifications
- */
-- (void) clear:(CDVInvokedUrlCommand*)command
-{
-    [self.commandDelegate runInBackground:^{
-        for (NSString* id in command.arguments) {
-            UILocalNotification* notification;
-
-            notification = [self.app localNotificationWithId:id];
-
-            if (!notification)
-                continue;
-
-            [self.app clearLocalNotification:notification];
-            [self fireEvent:@"clear" notification:notification];
+        for (UILocalNotification* notification in notifications) {
+            [self cancelNotification:notification fireEvent:YES];
         }
 
-        [self execCallback:command];
+        [[UIApplication sharedApplication]
+         cancelAllLocalNotifications];
+
+        [[UIApplication sharedApplication]
+         setApplicationIconBadgeNumber:0];
     }];
 }
 
 /**
- * Clear all local notifications.
- */
-- (void) clearAll:(CDVInvokedUrlCommand*)command
-{
-    [self.commandDelegate runInBackground:^{
-        [self clearAllLocalNotifications];
-        [self fireEvent:@"clearall"];
-        [self execCallback:command];
-    }];
-}
-
-/**
- * If a notification by ID is present.
+ * Checks wether a notification with an ID is scheduled.
  *
- * @param id
+ * @param {NSString} id
  *      The ID of the notification
- */
-- (void) isPresent:(CDVInvokedUrlCommand *)command
-{
-    [self isPresent:command type:NotifcationTypeAll];
-}
-
-/**
- * If a notification by ID is scheduled.
- *
- * @param id
- *      The ID of the notification
+ * @param callback
+ *      The callback function to be called with the result
  */
 - (void) isScheduled:(CDVInvokedUrlCommand*)command
 {
-    [self isPresent:command type:NotifcationTypeScheduled];
-}
-
-/**
- * Check if a notification with an ID is triggered.
- *
- * @param id
- *      The ID of the notification
- */
-- (void) isTriggered:(CDVInvokedUrlCommand*)command
-{
-    [self isPresent:command type:NotifcationTypeTriggered];
-}
-
-/**
- * Check if a notification with an ID exists.
- *
- * @param type
- *      The notification life cycle type
- */
-- (void) isPresent:(CDVInvokedUrlCommand*)command
-              type:(APPLocalNotificationType)type;
-{
     [self.commandDelegate runInBackground:^{
-        NSString* id = [command argumentAtIndex:0];
-        BOOL exist;
-
+        NSArray* arguments = [command arguments];
+        NSString* id       = [arguments objectAtIndex:0];
+        bool isScheduled   = [self isNotificationScheduledWithId:id];
         CDVPluginResult* result;
 
-        if (type == NotifcationTypeAll) {
-            exist = [self.app localNotificationExist:id];
-        } else {
-            exist = [self.app localNotificationExist:id type:type];
-        }
-
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                     messageAsBool:exist];
+                                     messageAsBool:isScheduled];
 
         [self.commandDelegate sendPluginResult:result
                                     callbackId:command.callbackId];
@@ -261,52 +185,28 @@
 }
 
 /**
- * List all ids from all local notifications.
- */
-- (void) getAllIds:(CDVInvokedUrlCommand*)command
-{
-    [self getIds:command byType:NotifcationTypeAll];
-}
-
-/**
- * List all ids from all pending notifications.
+ * Retrieves a list of ids from all currently pending notifications.
+ *
+ * @param callback
+ *      The callback function to be called with the result
  */
 - (void) getScheduledIds:(CDVInvokedUrlCommand*)command
 {
-    [self getIds:command byType:NotifcationTypeScheduled];
-}
-
-/**
- * List all ids from all triggered notifications.
- */
-- (void) getTriggeredIds:(CDVInvokedUrlCommand*)command
-{
-    [self getIds:command byType:NotifcationTypeTriggered];
-}
-
-/**
- * List of ids for given local notifications.
- *
- * @param type
- *      Notification life cycle type
- * @param ids
- *      The IDs of the notifications
- */
-- (void) getIds:(CDVInvokedUrlCommand*)command
-             byType:(APPLocalNotificationType)type;
-{
     [self.commandDelegate runInBackground:^{
-        CDVPluginResult* result;
-        NSArray* ids;
+        NSArray* notifications = self.scheduledNotifications;
 
-        if (type == NotifcationTypeAll) {
-            ids = [self.app localNotificationIds];
-        } else {
-            ids = [self.app localNotificationIdsByType:type];
+        NSMutableArray* scheduledIds = [[NSMutableArray alloc] init];
+        CDVPluginResult* result;
+
+        for (UILocalNotification* notification in notifications)
+        {
+            NSString* id = [notification.userInfo objectForKey:@"id"];
+
+            [scheduledIds addObject:id];
         }
 
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                    messageAsArray:ids];
+                                    messageAsArray:scheduledIds];
 
         [self.commandDelegate sendPluginResult:result
                                     callbackId:command.callbackId];
@@ -314,87 +214,17 @@
 }
 
 /**
- * Property list for given local notifications.
- *
- * @param ids
- *      The IDs of the notifications
- */
-- (void) getAll:(CDVInvokedUrlCommand*)command
-{
-    [self getOptions:command byType:NotifcationTypeAll];
-}
-
-/**
- * Property list for given scheduled notifications.
- *
- * @param ids
- *      The IDs of the notifications
- */
-- (void) getScheduled:(CDVInvokedUrlCommand*)command
-{
-    [self getOptions:command byType:NotifcationTypeScheduled];
-}
-
-/**
- * Property list for given triggered notifications.
- *
- * @param ids
- *      The IDs of the notifications
- */
-- (void) getTriggered:(CDVInvokedUrlCommand *)command
-{
-    [self getOptions:command byType:NotifcationTypeTriggered];
-}
-
-/**
- * Property list for given triggered notifications.
- *
- * @param type
- *      Notification life cycle type
- * @param ids
- *      The IDs of the notifications
- */
-- (void) getOptions:(CDVInvokedUrlCommand*)command
-             byType:(APPLocalNotificationType)type;
-{
-    [self.commandDelegate runInBackground:^{
-        NSArray* ids = command.arguments;
-        NSArray* notifications;
-        CDVPluginResult* result;
-
-        if (type == NotifcationTypeAll && ids.count == 0) {
-            notifications = [self.app localNotificationOptions];
-        }
-        else if (type == NotifcationTypeAll) {
-            notifications = [self.app localNotificationOptionsById:ids];
-        }
-        else if (ids.count == 0) {
-            notifications = [self.app localNotificationOptionsByType:type];
-        }
-        else {
-            notifications = [self.app localNotificationOptionsByType:type
-                                                               andId:ids];
-        }
-
-        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                    messageAsArray:notifications];
-
-        [self.commandDelegate sendPluginResult:result
-                                    callbackId:command.callbackId];
-    }];
-}
-
-/**
- * Inform if the app has the permission to show
+ * Informs if the app has the permission to show
  * badges and local notifications.
+ *
+ * @param callback
+ *      The function to be exec as the callback
  */
-- (void) hasPermission:(CDVInvokedUrlCommand*)command
+- (void) hasPermission:(CDVInvokedUrlCommand *)command
 {
     [self.commandDelegate runInBackground:^{
         CDVPluginResult* result;
-        BOOL hasPermission;
-
-        hasPermission = [self.app hasPermissionToScheduleLocalNotifications];
+        BOOL hasPermission = [self hasPermissionToSheduleNotifications];
 
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
                                      messageAsBool:hasPermission];
@@ -406,109 +236,228 @@
 
 /**
  * Ask for permission to show badges.
+ *
+ * @param callback
+ *      The function to be exec as the callback
  */
-- (void) registerPermission:(CDVInvokedUrlCommand*)command
+- (void) promptForPermission:(CDVInvokedUrlCommand *)command
 {
-    if ([[UIApplication sharedApplication]
-          respondsToSelector:@selector(registerUserNotificationSettings:)])
-    {
-        _command = command;
+    if (IsAtLeastiOSVersion(@"8.0")) {
+        UIUserNotificationType types;
+        UIUserNotificationSettings *settings;
+
+        types = UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound;
+
+        settings = [UIUserNotificationSettings settingsForTypes:types
+                                                     categories:nil];
 
         [self.commandDelegate runInBackground:^{
-            [self.app registerPermissionToScheduleLocalNotifications];
+            [[UIApplication sharedApplication]
+             registerUserNotificationSettings:settings];
         }];
-    } else {
-        [self hasPermission:command];
     }
 }
 
-#pragma mark -
-#pragma mark Core Logic
-
 /**
- * Schedule the local notification.
+ * If the app has the permission to show badges.
  */
-- (void) scheduleLocalNotification:(UILocalNotification*)notification
+- (BOOL) hasPermissionToSheduleNotifications
 {
-    [self cancelForerunnerLocalNotification:notification];
-    [self.app scheduleLocalNotification:notification];
+    if (IsAtLeastiOSVersion(@"8.0")) {
+        UIUserNotificationType types;
+        UIUserNotificationSettings *settings;
+
+        settings = [[UIApplication sharedApplication]
+                    currentUserNotificationSettings];
+
+        types = UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound;
+
+        return (settings.types & types);
+    } else {
+        return YES;
+    }
 }
 
 /**
- * Update the local notification.
+ * Schedules a new local notification and fies the coresponding event.
+ *
+ * @param {NSMutableDictionary} properties
+ *      The properties of the notification
  */
-- (void) updateLocalNotification:(UILocalNotification*)notification
-                     withOptions:(NSDictionary*)newOptions
+- (void) scheduleNotificationWithProperties:(NSMutableDictionary*)properties
 {
-    NSMutableDictionary* options = [notification.userInfo mutableCopy];
+    UILocalNotification* notification = [self notificationWithProperties:
+                                         properties];
 
-    [options addEntriesFromDictionary:newOptions];
-    [options setObject:[NSDate date] forKey:@"updatedAt"];
+    NSDictionary* userInfo = notification.userInfo;
+    NSString* id = [userInfo objectForKey:@"id"];
+    NSString* json = [userInfo objectForKey:@"json"];
 
-    notification = [[UILocalNotification alloc]
-                    initWithOptions:options];
+    [self fireEvent:@"add" id:id json:json];
 
-    [self scheduleLocalNotification:notification];
+    [[UIApplication sharedApplication]
+     scheduleLocalNotification:notification];
 }
 
 /**
- * Cancel all local notifications.
+ * Cancels the given local notification
+ * and fires the cancel event.
+ *
+ * @param {NSString} id
+ *      The ID of the local notification
  */
-- (void) cancelAllLocalNotifications
+- (void) cancelNotification:(UILocalNotification*)notification
+                  fireEvent:(BOOL)fireEvent
 {
-    [self.app cancelAllLocalNotifications];
-    [self.app setApplicationIconBadgeNumber:0];
-}
+    NSDictionary* userInfo = notification.userInfo;
+    NSString* id           = [userInfo objectForKey:@"id"];
+    NSString* json         = [userInfo objectForKey:@"json"];
 
-/**
- * Clear all local notifications.
- */
-- (void) clearAllLocalNotifications
-{
-    [self.app clearAllLocalNotifications];
-    [self.app setApplicationIconBadgeNumber:0];
-}
+    [[UIApplication sharedApplication]
+     cancelLocalNotification:notification];
 
-/**
- * Cancel a maybe given forerunner with the same ID.
- */
-- (void) cancelForerunnerLocalNotification:(UILocalNotification*)notification
-{
-    NSString* id = notification.options.id;
-    UILocalNotification* forerunner;
-
-    forerunner = [self.app localNotificationWithId:id];
-
-    if (!forerunner)
-        return;
-
-    [self.app cancelLocalNotification:forerunner];
+    if (fireEvent) {
+        [self fireEvent:@"cancel" id:id json:json];
+    }
 }
 
 /**
  * Cancels all local notification with are older then
  * a specific amount of seconds
+ *
+ * @param {float} seconds
+ *      The time interval in seconds
  */
 - (void) cancelAllNotificationsWhichAreOlderThen:(float)seconds
 {
-    NSArray* notifications;
+    NSDate* now = [NSDate date];
 
-    notifications = [self.app scheduledLocalNotifications];
+    NSArray* notifications = self.scheduledNotifications;
 
     for (UILocalNotification* notification in notifications)
     {
-        if (notification && [notification isRepeating]
-            && notification.timeIntervalSinceFireDate > seconds)
-        {
-            [self.app cancelLocalNotification:notification];
+        NSDate* fireDate = notification.fireDate;
+        NSTimeInterval fireDateDistance = [now timeIntervalSinceDate:
+                                           fireDate];
 
-            [self fireEvent:@"cancel" notification:notification];
+        if (notification.repeatInterval == NSEraCalendarUnit
+            && fireDateDistance > seconds) {
+            [self cancelNotification:notification fireEvent:YES];
         }
     }
 }
 
-#pragma mark -
-#pragma mark Delegates
+/**
+ * Retrurns a key-value dictionary for repeat intervals.
+ *
+ * @return {NSMutableDictionary}
+ */
+- (NSMutableDictionary*) repeatDict
+{
+    NSMutableDictionary* repeatDict = [[NSMutableDictionary alloc] init];
+
+#ifdef NSCalendarUnitHour
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSCalendarUnitSecond] forKey:@"secondly"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSCalendarUnitMinute] forKey:@"minutely"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSCalendarUnitHour] forKey:@"hourly"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSCalendarUnitDay] forKey:@"daily"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSWeekCalendarUnit] forKey:@"weekly"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSCalendarUnitMonth] forKey:@"monthly"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSCalendarUnitYear] forKey:@"yearly"];
+#else
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSSecondCalendarUnit] forKey:@"secondly"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSMinuteCalendarUnit] forKey:@"minutely"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSHourCalendarUnit] forKey:@"hourly"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSDayCalendarUnit] forKey:@"daily"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSWeekCalendarUnit] forKey:@"weekly"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSMonthCalendarUnit] forKey:@"monthly"];
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSYearCalendarUnit] forKey:@"yearly"];
+#endif
+
+    [repeatDict setObject:
+     [NSNumber numberWithInt:NSEraCalendarUnit] forKey:@""];
+
+    return repeatDict;
+}
+
+/**
+ * Returns the userDict for a local notification.
+ *
+ * @param {NSMutableDictionary} options
+ *      The properties for the local notification
+ * @return {NSDictionary}
+ */
+- (NSDictionary*) userDict:(NSMutableDictionary*)options
+{
+    NSString* id = [options objectForKey:@"id"];
+    NSString* ac = [options objectForKey:@"autoCancel"];
+    NSString* js = [options objectForKey:@"json"];
+
+    return [NSDictionary dictionaryWithObjectsAndKeys:
+            id, @"id", ac, @"autoCancel", js, @"json", nil];
+}
+
+/**
+ * Creates an notification object based on the given properties.
+ *
+ * @param {NSMutableDictionary} properties
+ *      The properties for the local notification
+ * @return {UILocalNotification}
+ */
+- (UILocalNotification*) notificationWithProperties:(NSMutableDictionary*)options
+{
+    UILocalNotification* notification = [[UILocalNotification alloc] init];
+
+    double timestamp = [[options objectForKey:@"date"] doubleValue];
+    NSString* msg = [options objectForKey:@"message"];
+    NSString* title = [options objectForKey:@"title"];
+    NSString* sound = [options objectForKey:@"sound"];
+    NSString* repeat = [options objectForKey:@"repeat"];
+    NSInteger badge = [[options objectForKey:@"badge"] intValue];
+
+    notification.fireDate = [NSDate dateWithTimeIntervalSince1970:timestamp];
+    notification.timeZone = [NSTimeZone defaultTimeZone];
+    notification.userInfo = [self userDict:options];
+    notification.applicationIconBadgeNumber = badge;
+
+    notification.repeatInterval = [[[self repeatDict] objectForKey:repeat]
+                                   intValue];
+
+    if (![self stringIsNullOrEmpty:msg])
+    {
+        if (![self stringIsNullOrEmpty:title]) {
+            notification.alertBody = [NSString stringWithFormat:
+                                      @"%@\n%@", title, msg];
+        } else {
+            notification.alertBody = msg;
+        }
+    }
+
+    if (sound != (NSString*)[NSNull null])
+    {
+        if ([sound isEqualToString:@""]) {
+            notification.soundName = UILocalNotificationDefaultSoundName;
+        } else {
+            notification.soundName = sound;
+        }
+    }
+
+    return notification;
+}
 
 /**
  * Calls the cancel or trigger event after a local notification was received.
@@ -518,47 +467,32 @@
 {
     UILocalNotification* notification = [localNotification object];
 
-    if ([notification wasUpdated])
-        return;
+    NSDictionary* userInfo = notification.userInfo;
+    NSString* id = [userInfo objectForKey:@"id"];
+    NSString* json = [userInfo objectForKey:@"json"];
+    BOOL autoCancel = [[userInfo objectForKey:@"autoCancel"] boolValue];
 
-    NSTimeInterval timeInterval = [notification timeIntervalSinceLastTrigger];
+    NSDate* now = [NSDate date];
+    NSDate* fireDate = notification.fireDate;
+    NSTimeInterval fireDateDistance = [now timeIntervalSinceDate:fireDate];
+    NSString* event = (fireDateDistance < 1) ? @"trigger" : @"click";
 
-    NSString* event = (timeInterval <= 1 && deviceready) ? @"trigger" : @"click";
-
-    [self fireEvent:event notification:notification];
-
-    if ([event isEqualToString:@"click"] && ![notification isRepeating])
-    {
-        [self.app cancelLocalNotification:notification];
-
-        [self fireEvent:@"cancel" notification:notification];
-        return;
+    if (autoCancel && [event isEqualToString:@"click"]) {
+        [self cancelNotification:notification fireEvent:YES];
     }
 
-    if ([event isEqualToString:@"click"])
-        return;
-
-    timeInterval = [notification timeIntervalSinceFireDate];
-
-    if (timeInterval > 1 && [notification isRepeating])
-    {
-        [self fireEvent:@"fireUpdateEvent" notification:notification];
-        return;
-    }
+    [self fireEvent:event id:id json:json];
 }
 
 /**
- * Called when app has started
- * (by clicking on a local notification).
+ * Calls the cancel or trigger event after a local notification was received.
  */
 - (void) didFinishLaunchingWithOptions:(NSNotification*)notification
 {
     NSDictionary* launchOptions = [notification userInfo];
 
-    UILocalNotification* localNotification;
-
-    localNotification = [launchOptions objectForKey:
-                         UIApplicationLaunchOptionsLocalNotificationKey];
+    UILocalNotification* localNotification = [launchOptions objectForKey:
+                                              UIApplicationLaunchOptionsLocalNotificationKey];
 
     if (localNotification) {
         [self didReceiveLocalNotification:
@@ -568,44 +502,26 @@
 }
 
 /**
- * Called on otification settings registration is completed.
- */
-- (void) didRegisterUserNotificationSettings:(UIUserNotificationSettings*)settings
-{
-    if (_command)
-    {
-        [self hasPermission:_command];
-        _command = NULL;
-    }
-}
-
-#pragma mark -
-#pragma mark Life Cycle
-
-/**
- * Registers obervers after plugin was initialized.
+ * Registers obervers for the following events after plugin was initialized.
+ *      didReceiveLocalNotification:
+ *      didFinishLaunchingWithOptions:
  */
 - (void) pluginInitialize
 {
-    NSNotificationCenter* center = [NSNotificationCenter
-                                    defaultCenter];
+    NSNotificationCenter* notificationCenter = [NSNotificationCenter
+                                                defaultCenter];
 
     eventQueue = [[NSMutableArray alloc] init];
 
-    [center addObserver:self
-               selector:@selector(didReceiveLocalNotification:)
-                   name:CDVLocalNotification
-                 object:nil];
+    [notificationCenter addObserver:self
+                           selector:@selector(didReceiveLocalNotification:)
+                               name:CDVLocalNotification
+                             object:nil];
 
-    [center addObserver:self
-               selector:@selector(didFinishLaunchingWithOptions:)
-                   name:UIApplicationDidFinishLaunchingNotification
-                 object:nil];
-
-    [center addObserver:self
-               selector:@selector(didRegisterUserNotificationSettings:)
-                   name:UIApplicationRegisterUserNotificationSettings
-                 object:nil];
+    [notificationCenter addObserver:self
+                           selector:@selector(didFinishLaunchingWithOptions:)
+                               name:UIApplicationDidFinishLaunchingNotification
+                             object:nil];
 }
 
 /**
@@ -617,18 +533,72 @@
     [self cancelAllNotificationsWhichAreOlderThen:432000];
 }
 
-#pragma mark -
-#pragma mark Helper
+/**
+ * Checks weather the given string is empty or not.
+ *
+ * @param {NSString} str The string to be check
+ * @return {BOOL}
+ */
+- (BOOL) stringIsNullOrEmpty:(NSString*)str
+{
+    if (str == (NSString*)[NSNull null]) {
+        return YES;
+    }
+
+    if ([str isEqualToString:@""]) {
+        return YES;
+    }
+
+    return NO;
+}
+
+/**
+ * Checks wether a notification with an ID is scheduled or not.
+ *
+ * @param id
+ *      The ID of the notification
+ * @return BOOL
+ */
+- (BOOL) isNotificationScheduledWithId:(NSString*)id
+{
+    UILocalNotification* notification = [self notificationWithId:id];
+
+    return notification != NULL;
+}
+
+/**
+ * Retrieves the local notification by its ID.
+ *
+ * @param {NSString} id
+ *      The ID of the notification
+ * @return UILocalNotification*
+ */
+- (UILocalNotification*) notificationWithId:(NSString*)id
+{
+    NSArray* notifications = self.scheduledNotifications;
+
+    for (UILocalNotification* notification in notifications)
+    {
+        NSString* notId = [notification.userInfo objectForKey:@"id"];
+
+        if ([notId isEqualToString:id]) {
+            return notification;
+        }
+    }
+
+    return NULL;
+}
 
 /**
  * Retrieves the application state
  *
- * @return
+ * @return {NSString}
  *      Either "background" or "foreground"
  */
 - (NSString*) applicationState
 {
-    UIApplicationState state = [self.app applicationState];
+    UIApplicationState state = [[UIApplication sharedApplication]
+                                applicationState];
 
     bool isActive = state == UIApplicationStateActive;
 
@@ -636,53 +606,50 @@
 }
 
 /**
-  * Simply invokes the callback without any parameter.
-  */
-- (void) execCallback:(CDVInvokedUrlCommand*)command
-{
-    CDVPluginResult *result = [CDVPluginResult
-                               resultWithStatus:CDVCommandStatus_OK];
-
-    [self.commandDelegate sendPluginResult:result
-                                callbackId:command.callbackId];
-}
-
-/**
- * Short hand for shared application instance.
+ * Retrieves all scheduled notifications.
+ *
+ * @return {NSArray}
+ *      A list of all scheduled local notifications
  */
-- (UIApplication*) app
+- (NSArray*) scheduledNotifications
 {
-    return [UIApplication sharedApplication];
-}
+    NSMutableArray* notificationsWithoutNIL = [[NSMutableArray alloc]
+                                               init];
 
-/**
- * Fire general event.
- */
-- (void) fireEvent:(NSString*)event
-{
-    [self fireEvent:event notification:NULL];
-}
+    NSArray* notifications = [[UIApplication sharedApplication]
+                              scheduledLocalNotifications];
 
-/**
- * Fire event for local notification.
- */
-- (void) fireEvent:(NSString*)event notification:(UILocalNotification*)notification
-{
-    NSString* js;
-    NSString* params = [NSString stringWithFormat:
-                        @"\"%@\"", self.applicationState];
-
-    if (notification) {
-        NSString* args = [notification encodeToJSON];
-
-        params = [NSString stringWithFormat:
-                  @"%@,'%@'",
-                  args, self.applicationState];
+    for (UILocalNotification* notification in notifications)
+    {
+        if (notification) {
+            [notificationsWithoutNIL addObject:notification];
+        }
     }
 
-    js = [NSString stringWithFormat:
-          @"cordova.plugins.notification.local.fireEvent('%@', %@)",
-          event, params];
+    return notificationsWithoutNIL;
+}
+
+/**
+ * Fires the given event.
+ *
+ * @param {NSString} event
+ *      The Name of the event
+ * @param {NSString} id
+ *      The ID of the notification
+ * @param {NSString} json
+ *      A custom (JSON) string
+ */
+- (void) fireEvent:(NSString*)event id:(NSString*)id json:(NSString*)json
+{
+    NSString* appState = self.applicationState;
+
+    NSString* params = [NSString stringWithFormat:
+                        @"\"%@\",\"%@\",\\'%@\\'",
+                        id, appState, json];
+
+    NSString* js = [NSString stringWithFormat:
+                    @"setTimeout('plugin.notification.local.on%@(%@)',0)",
+                    event, params];
 
     if (deviceready) {
         [self.commandDelegate evalJs:js];

@@ -13,35 +13,15 @@
                             "count": 1
                         },
                         {
-                            "xml": "<receiver android:exported=\"false\" android:name=\"de.appplant.cordova.plugin.localnotification.TriggerReceiver\" />",
+                            "xml": "<receiver android:name=\"de.appplant.cordova.plugin.localnotification.Receiver\" />",
                             "count": 1
                         },
                         {
-                            "xml": "<receiver android:exported=\"false\" android:name=\"de.appplant.cordova.plugin.localnotification.ClearReceiver\" />",
+                            "xml": "<receiver android:name=\"de.appplant.cordova.plugin.localnotification.Restore\"><intent-filter><action android:name=\"android.intent.action.BOOT_COMPLETED\" /></intent-filter></receiver>",
                             "count": 1
                         },
                         {
-                            "xml": "<activity android:launchMode=\"singleInstance\" android:name=\"de.appplant.cordova.plugin.localnotification.ClickActivity\" android:theme=\"@android:style/Theme.NoDisplay\" />",
-                            "count": 1
-                        },
-                        {
-                            "xml": "<receiver android:exported=\"false\" android:name=\"de.appplant.cordova.plugin.notification.TriggerReceiver\" />",
-                            "count": 1
-                        },
-                        {
-                            "xml": "<receiver android:exported=\"false\" android:name=\"de.appplant.cordova.plugin.notification.ClearReceiver\" />",
-                            "count": 1
-                        },
-                        {
-                            "xml": "<receiver android:name=\"de.appplant.cordova.plugin.localnotification.RestoreReceiver\"><intent-filter><action android:name=\"android.intent.action.BOOT_COMPLETED\" /></intent-filter></receiver>",
-                            "count": 1
-                        },
-                        {
-                            "xml": "<activity android:launchMode=\"singleInstance\" android:name=\"de.appplant.cordova.plugin.notification.ClickActivity\" android:theme=\"@android:style/Theme.NoDisplay\" />",
-                            "count": 1
-                        },
-                        {
-                            "xml": "<activity android:configChanges=\"orientation|keyboardHidden|keyboard|screenSize|locale\" android:launchMode=\"singleInstance\" android:name=\"it.mobimentum.phonegapspinnerplugin.ProgressActivity\" android:theme=\"@android:style/Theme.Translucent.NoTitleBar\"><intent-filter></intent-filter></activity>",
+                            "xml": "<activity android:launchMode=\"singleInstance\" android:name=\"de.appplant.cordova.plugin.localnotification.ReceiverActivity\" />",
                             "count": 1
                         }
                     ],
@@ -79,15 +59,11 @@
                             "count": 1
                         },
                         {
-                            "xml": "<feature name=\"SpinnerPlugin\"><param name=\"android-package\" value=\"it.mobimentum.phonegapspinnerplugin.SpinnerPlugin\" /></feature>",
+                            "xml": "<feature name=\"SpinnerDialog\"><param name=\"android-package\" value=\"hu.dpal.phonegap.plugins.SpinnerDialog\" /></feature>",
                             "count": 1
                         },
                         {
                             "xml": "<feature name=\"Toast\"><param name=\"android-package\" value=\"nl.xservices.plugins.Toast\" /></feature>",
-                            "count": 1
-                        },
-                        {
-                            "xml": "<feature name=\"SpinnerDialog\"><param name=\"android-package\" value=\"hu.dpal.phonegap.plugins.SpinnerDialog\" /></feature>",
                             "count": 1
                         }
                     ]
@@ -102,7 +78,7 @@
         "de.appplant.cordova.plugin.local-notification": {
             "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
         },
-        "it.mobimentum.phonegapspinnerplugin": {
+        "hu.dpal.phonegap.plugins.SpinnerDialog": {
             "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
         },
         "nl.x-services.plugins.toast": {
@@ -112,9 +88,6 @@
             "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
         },
         "org.apache.cordova.geolocation": {
-            "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
-        },
-        "hu.dpal.phonegap.plugins.SpinnerDialog": {
             "PACKAGE_NAME": "de.hspforzheim.pforzheimabfuhrkalender"
         }
     },

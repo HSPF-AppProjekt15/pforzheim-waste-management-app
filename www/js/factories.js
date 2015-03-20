@@ -418,7 +418,7 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
             Logger.log("addNotifications has no permission");
         });
         $timeout(function () {
-            window.plugin.notification.local.getScheduledIds(function (scheduledIds) {
+            $cordovaLocalNotification.getScheduledIds($scope).then(function (scheduledIds) {
                 Logger.log('Scheduled IDs: ' + scheduledIds.join(' ,'));
             });
         },4000);

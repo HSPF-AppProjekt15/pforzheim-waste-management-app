@@ -263,11 +263,9 @@ application = angular.module('app.controllers', [])
                 });
         };
 
-
         $scope.updateSearchBtn = function () {
             $scope.searchBtn = ($scope.query.street != "" && $scope.query.hnr > 0);
         };
-
 
         $scope.selectStreet = function (street) {
             $scope.query.street = street;
