@@ -22,7 +22,7 @@ application = angular.module('app.controllers', [])
         $scope.streetSuggestions = [];
         $scope.searchBtn = false;
 
-        $scope.popupHeight = $window.innerHeight - 130 + "px"; // Body Height des FAQ
+        $scope.popupHeight = {height: $window.innerHeight - 130 + "px"}; // Body Height der PopUps
         $scope.faqs = [];
 
         $scope.notifications = InitValueLoader.load("notifications");
