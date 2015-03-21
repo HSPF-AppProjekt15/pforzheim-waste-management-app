@@ -23,7 +23,7 @@ pfAppF.factory('AppReady', function ($q, $rootScope,Logger) {
     }
 });
 
-pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
+pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeout) {
 
     var db_;
 
@@ -55,7 +55,7 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
         var q = $q.defer(),
             query = "CREATE TABLE IF NOT EXISTS " + tableName + " ( " + schema + " )";
         $cordovaSQLite.execute(db_, query).then(function () {
-            log("Table created: ", tableName);
+            log("Table created: "+ tableName);
             q.resolve(tableName)
         }, function (err) {
             log("Table " + tableName + " could not be created: ", err);
@@ -67,8 +67,9 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
 
     var selectFromTable_ = function (sqlStatement, bindings) {
         var q = $q.defer();
-
+        log("selectFromTable_: "+sqlStatement + "; "+ bindings.join());
         $cordovaSQLite.execute(db_, sqlStatement, bindings).then(function (res) {
+            log("selectFromTable_: erfolgreich");
             q.resolve(res);
         }, function (err) {
             log("Select could not be retrieved. ", err);
@@ -91,11 +92,12 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
         return q.promise;
     };
 
+
     var initDB = function () {
         log("initDB called");
         var q = $q.defer();
         // successively call private methods, chaining to next with .then()
-        openDB_("pwm").then(function (db) {
+        openDB_("pwm").then(function () {
             // Datenbanken erzeugen
             createTable_("collection_dates", "street_id integer, house_number integer, waste_type text, collection_date date, date_added date, primary key (street_id, house_number, waste_type, collection_date)").then(function () {
                 createTable_("streets", "street_id integer primary key, street_name text").then(function () {
@@ -117,11 +119,28 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
                             var streets_json = {};
                             $http.get('streets.json').success(function (data) {
                                 streets_json = data;
+
                                 var insert_query = "INSERT INTO streets (street_name) VALUES (?)";
-                                for (var o in streets_json) {
-                                    $cordovaSQLite.execute(db, insert_query, [streets_json[o].s]);
-                                }
-                                q.resolve();
+
+                                $cordovaSQLite.insertCollection(db_,insert_query,["Abnobastraße","Adam-Riese-Straße","Adam-von-Au-Straße","Adlerstraße","Adolf-Becker-Straße"]).then(function () {
+                                    $timeout(function () {
+                                        query = "SELECT count(*) as cnt FROM streets";
+
+                                    selectFromTable_(query, []).then(function (res) {
+                                        Logger.log("Anzahl Einträge in streets: " + res.rows.item(0).cnt);
+                                    });
+                                    q.resolve();},3000);
+                                });
+                                /*for (var o in streets_json) {
+                                    insertIntoTable_(insert_query, [streets_json[o].s]);
+                                }*/
+                                /*$timeout(function () {
+                                    query = "SELECT count(*) as cnt FROM streets";
+                                    selectFromTable_(query, []).then(function (res) {
+                                        Logger.log("Anzahl Einträge in streets: " + res.rows.item(0).cnt);
+                                    });
+                                },3000);
+                                q.resolve();*/
                             });
 
                         }
@@ -139,13 +158,15 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady) {
     };
 
     var getStreets = function (street) {
+        log("DB.getStreets(): " + street);
         var query = "SELECT street_name FROM streets WHERE street_name LIKE ? LIMIT 5",
             streetSuggestions = [],
             q = $q.defer();
         selectFromTable_(query, [street + '%']).then(function (res) {
+            log("DB.getStreets() selectFromTable_ erfolgreich. Anzahl: " + res.rows.length);
             if (res.rows.length > 0) {
                 for (var i = 0; i < res.rows.length; i++) {
-                    //log(res.rows.item(i).street_name);
+                    log(res.rows.item(i).street_name);
                     streetSuggestions.push(res.rows.item(i).street_name);
                 }
                 q.resolve(streetSuggestions);
@@ -291,7 +312,7 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) 
         }
     };
 });
-pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
+pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout) {
     var spinner_,
         _isActive = false;
 
@@ -301,6 +322,12 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
         if(isAvailable()) {
             try {
                 spinner_.show(null, null, true);
+                // falls ein Fehler aufgetreten ist und der Lade-Spinner nicht mehr gestoppt wird, nach 10s automatisch stoppen.
+                $timeout(function () {
+                    if(isActive()) {
+                        hide();
+                    }
+                },10000);
                 _isActive = true;
             }
             catch (err) {
@@ -341,8 +368,12 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady) {
 });
 
 pfAppF.factory('Logger', function ($log) {
-    var useConsole=true;
+    var useConsole=true,
+        count=0;
     var log = function (msg) {
+        msg=count+': '+msg;
+        count++;
+
         if (arguments.length > 1) {
             msg=Array.prototype.slice.call(arguments).join(" ");
         }
@@ -366,23 +397,17 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
             Logger.log("app is ready, checking permissions");
             try {
 
-               window.plugin.notification.local.hasPermission(function (granted) {
-                   Logger.log('Permission already has been granted: ' + granted);
-
-                   if(!granted) {
-                       window.plugin.notification.local.registerPermission(function (granted) {
-                           console.log('Permission has been granted: ' + granted);
-                           if(granted) {
-                               q.resolve();
-                           }
-                           else {
-                               q.reject();
-                           }
-                       });
-                   }
-                   else {
+               $cordovaLocalNotification.hasPermission().then(function () {
+                   Logger.log('Permission already has been granted.');
+                   q.resolve();
+               }, function() {
+                   $cordovaLocalNotification.registerPermission().then(function () {
+                       Logger.log('Permission has been granted after prompt.');
                        q.resolve();
-                   }
+                   }, function () {
+                       Logger.log('Permission has not been granted after prompt.');
+                       q.reject();
+                   });
                });
             }
             catch (err) {
@@ -394,7 +419,7 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
     };
 
     var addNotifications = function (dates,idStart,message,title,$scope) {
-        hasPermission().then(function () {
+        //hasPermission().then(function () {
             Logger.log(dates);
             var id = idStart;
             for (var i = 0; i < dates.length; i++) {
@@ -414,14 +439,18 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
                 });
                 id++;
             }
-        },function()   {
-            Logger.log("addNotifications has no permission");
-        });
-        $timeout(function () {
-            $cordovaLocalNotification.getScheduledIds($scope).then(function (scheduledIds) {
-                Logger.log('Scheduled IDs: ' + scheduledIds.join(' ,'));
-            });
-        },4000);
+            $timeout(function () {
+
+                $cordovaLocalNotification.getScheduledIds($scope).then(function (scheduledIds) {
+
+                    Logger.log("Scheduled IDs: " + scheduledIds.join(','));
+
+                });
+
+            },10000);
+        //},function()   {
+        //    Logger.log("addNotifications has no permission");
+        //});
     };
 
     var cancelNotifications = function(idStart, $scope) {
@@ -454,6 +483,7 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
                 addNotifications(dates,5000,"Morgen ist 14-tägiger Restmüll.","14-tägiger Restmüll",$scope);
                 break;
         }
+
     };
 
     var cancelNotificationForType = function (type, $scope) {

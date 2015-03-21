@@ -280,6 +280,8 @@ application = angular.module('app.controllers', [])
             // To do: register next push
             localStorageService.set("notifications", newValue);
             if (newValue === true) {
+                log("toast check");
+                log(window.plugins.toast);
 				if (LoadingSpinner.isAvailable()) {
 					window.plugins.toast.showLongTop("Sie werden einen Tag vor der Leerung erinnert");
 				}
@@ -338,14 +340,7 @@ application = angular.module('app.controllers', [])
         // INIT CONTROLLER
         $rootScope.dbReady.then(function () {
             log("AppCtrl dbReady fired");
-            $timeout(function () {
-                try {
-                    log("spinner:" + JSON.stringify(spinnerplugin));
-                }
-                catch (e) {
-                    log(e);
-                }
-            }, 5000);
+
 
             initController();
         });
