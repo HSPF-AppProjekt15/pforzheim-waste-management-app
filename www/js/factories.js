@@ -390,32 +390,6 @@ pfAppF.factory('Logger', function ($log) {
 
 pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,AppReady,$timeout) {
 
-    var checkNotifications = function ($scope) {
-        var idStart=7000;
-
-        Logger.log("bin da");
-        var id = idStart;
-        var notifications = [];
-        for (var i = 0; i < 1; i++) {
-            Logger.log("adding: ", id);
-            var msecPerDay = 10 * 1000,
-                date = new Date(),
-                today = new Date(),
-                yesterday = new Date(today.getTime() + msecPerDay);
-            Logger.log("yesterday "+yesterday);
-            notifications.push({
-                id: id,
-                at: yesterday,
-                text: "BLABLA",
-                title: "TEST"});
-            id++;
-        }
-        Logger.log("nots " +notifications.join());
-        $cordovaLocalNotification.add(notifications, $scope).then(function () {
-            Logger.log('added notifications for test');
-        });
-
-    };
     var hasPermission = function () {
         var q= $q.defer();
         AppReady.ready().then(function () {

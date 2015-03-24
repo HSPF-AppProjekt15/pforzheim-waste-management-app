@@ -272,10 +272,6 @@ application = angular.module('app.controllers', [])
             $scope.showSuggestions = false;
         };
 
-        $scope.checkNotifications = function () {
-            log("check");
-            Notifications.checkNotifications($scope);
-        };
 
         $scope.$watch('notifications', function (newValue, oldValue) {
             // Check if value has changes
