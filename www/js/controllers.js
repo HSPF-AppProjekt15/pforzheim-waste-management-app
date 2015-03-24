@@ -6,7 +6,7 @@ var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
 var application;
 application = angular.module('app.controllers', [])
 
-    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, Logger, $timeout, Notifications, InitValueLoader, $window) {
+    .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, Logger, $timeout, Notifications, InitValueLoader, $window, Toast) {
         $scope.query = {
             "street": "",
             "hnr": ""
@@ -77,8 +77,8 @@ application = angular.module('app.controllers', [])
                 } else {
                     $scope.showDates = false;
                     log("loadDatesForCurrentStreet: no result");
-                    if (LoadingSpinner.isAvailable()) {
-                        window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
+                    if (Toast.isAvailable()) {
+                        Toast.show("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
                     }
                 }
                 LoadingSpinner.hide();
@@ -196,8 +196,8 @@ application = angular.module('app.controllers', [])
                     $scope.showDates = false;
 
                     LoadingSpinner.hide();
-                    if (LoadingSpinner.isAvailable()) {
-                        window.plugins.toast.showLongTop("Es konnte keine Verbindung aufgebaut werden,\nstellen sie eine Internetverbindung her");
+                    if (Toast.isAvailable()) {
+                        Toast.show("Es konnte keine Verbindung aufgebaut werden,\nstellen sie eine Internetverbindung her");
                     }
                 });
         };
@@ -247,8 +247,8 @@ application = angular.module('app.controllers', [])
                             // TODO: wenn Straße nicht in DB ist, Error anzeigen
                             log("getStreetFromLocation: Straße nicht in PF gefunden: " + address.street);
                             LoadingSpinner.hide();
-                            if (LoadingSpinner.isAvailable()) {
-                                window.plugins.toast.showLongTop("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
+                            if (Toast.isAvailable()) {
+                                Toast.show("Es konnten keine Daten zur angegebenen Adresse gefunden werden");
                             }
                         })
 
@@ -257,8 +257,8 @@ application = angular.module('app.controllers', [])
                 function (err) {
                     $scope.showDates = false;
                     LoadingSpinner.hide();
-                    if (LoadingSpinner.isAvailable()) {
-                        window.plugins.toast.showLongTop("Es konnte kein GPS Signal gefunden werden\nMöglicherweise ist ihr GPS oder Internetverbindung deaktiviert");
+                    if (Toast.isAvailable()) {
+                        Toast.show("Es konnte kein GPS Signal gefunden werden\nMöglicherweise ist ihr GPS oder Internetverbindung deaktiviert");
                     }
                 });
         };
@@ -280,10 +280,8 @@ application = angular.module('app.controllers', [])
             // To do: register next push
             localStorageService.set("notifications", newValue);
             if (newValue === true) {
-                log("toast check");
-                log(window.plugins.toast);
-				if (LoadingSpinner.isAvailable()) {
-					window.plugins.toast.showLongTop("Sie werden einen Tag vor der Leerung erinnert");
+				if (Toast.isAvailable()) {
+                    Toast.show("Sie werden einen Tag vor der Leerung erinnert");
 				}
                 $scope.pushBio = true;
                 $scope.pushGelb = true;
@@ -292,7 +290,7 @@ application = angular.module('app.controllers', [])
                 $scope.pushRM14 = true;
             } else {
                 if(!LoadingSpinner.isActive()) {
-                    window.plugins.toast.showLongTop("Sie werden nicht mehr erinnert");
+                    Toast.show("Sie werden nicht mehr erinnert");
                 }
                 $scope.pushBio = false;
                 $scope.pushGelb = false;

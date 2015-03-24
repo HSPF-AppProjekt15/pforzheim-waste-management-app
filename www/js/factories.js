@@ -312,7 +312,7 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) 
         }
     };
 });
-pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout) {
+pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout, $cordovaSpinnerDialog) {
     var spinner_,
         _isActive = false;
 
@@ -321,7 +321,7 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout) {
         console.log("Spinnerplugin show");
         if(isAvailable()) {
             try {
-                spinner_.show(null, null, true);
+                $cordovaSpinnerDialog.show(null, null, true);
                 // falls ein Fehler aufgetreten ist und der Lade-Spinner nicht mehr gestoppt wird, nach 10s automatisch stoppen.
                 $timeout(function () {
                     if(isActive()) {
@@ -337,7 +337,7 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout) {
     };
     var hide = function () {
         if(isAvailable()) {
-            spinner_.hide();
+            $cordovaSpinnerDialog.hide();
             _isActive = false;
         }
     };
@@ -352,13 +352,12 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout) {
         return (typeof window.plugins.spinnerDialog !== "undefined");
     }
 
-
-    AppReady.ready().then(function () {
+/*    AppReady.ready().then(function () {
             if(isAvailable()) {
                 spinner_=window.plugins.spinnerDialog;
             }
         }
-    );
+    );*/
     return {
         show: show,
         hide: hide,
@@ -532,6 +531,25 @@ pfAppF.factory('InitValueLoader', function (localStorageService) {
 
     return {
         load: load
+    }
+});
+
+pfAppF.factory('Toast', function ($cordovaToast) {
+
+    var show = function (msg) {
+        $cordovaToast.showLongTop(msg);
+    };
+
+    var isAvailable = function () {
+        if(!window.plugins) {
+            return false;
+        }
+        return (typeof window.plugins.toast !== "undefined");
+    };
+
+    return {
+        show: show,
+        isAvailable: isAvailable
     }
 });
 
