@@ -6176,10 +6176,8 @@ angular.module('ngCordova.plugins.sqlite', [])
 
         db.transaction(function (tx) {
           (function insertOne() {
-            var record = coll.splice(0, 1)[0]; // get the first record of coll and reduce coll by one
-              console.log("coll: "+ coll);
+            var record = coll.splice(0, 1); // get the first record of coll and reduce coll by one
             try {
-                console.log("ngCordova "+ query + "; "+record+"; "+record.s);
               tx.executeSql(query, record, function (tx, result) {
                 if (coll.length === 0) {
                   q.resolve(result);

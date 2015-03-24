@@ -272,32 +272,37 @@ application = angular.module('app.controllers', [])
             $scope.showSuggestions = false;
         };
 
+
         $scope.$watch('notifications', function (newValue, oldValue) {
             // Check if value has changes
             if (newValue === oldValue) {
                 return;
             }
-            // To do: register next push
-            localStorageService.set("notifications", newValue);
-            if (newValue === true) {
-				if (Toast.isAvailable()) {
-                    Toast.show("Sie werden einen Tag vor der Leerung erinnert");
-				}
-                $scope.pushBio = true;
-                $scope.pushGelb = true;
-                $scope.pushPapier = true;
-                $scope.pushRM = true;
-                $scope.pushRM14 = true;
-            } else {
-                if(!LoadingSpinner.isActive()) {
-                    Toast.show("Sie werden nicht mehr erinnert");
+
+            Notifications.hasPermission().then(function () {
+                localStorageService.set("notifications", newValue);
+                if (newValue === true) {
+                    if (Toast.isAvailable()) {
+                        Toast.show("Sie werden einen Tag vor der Leerung erinnert");
+                    }
+                    $scope.pushBio = true;
+                    $scope.pushGelb = true;
+                    $scope.pushPapier = true;
+                    $scope.pushRM = true;
+                    $scope.pushRM14 = true;
+                } else {
+                    if(!LoadingSpinner.isActive()) {
+                        Toast.show("Sie werden nicht mehr erinnert");
+                    }
+                    $scope.pushBio = false;
+                    $scope.pushGelb = false;
+                    $scope.pushPapier = false;
+                    $scope.pushRM = false;
+                    $scope.pushRM14 = false;
                 }
-                $scope.pushBio = false;
-                $scope.pushGelb = false;
-                $scope.pushPapier = false;
-                $scope.pushRM = false;
-                $scope.pushRM14 = false;
-            }
+            },function() {
+                Logger.log("addNotifications has no permission");
+            });
         }, true);
 
         $scope.$watch('pushBio', function (newValue, oldValue) {

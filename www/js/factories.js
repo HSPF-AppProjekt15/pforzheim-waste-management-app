@@ -116,13 +116,13 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
                         } else {
                             log("Tabelle streets noch nicht gefüllt. Mit Daten füllen.");
                             // Aus Datei einlesen und in DB schreiben
-                            var streets_json = {};
-                            $http.get('streets.json').success(function (data) {
-                                streets_json = data;
+                            $http.get('streets.txt').success(function (data) {
+                                var streets_array = data.split('\n');
+                                log("streets_array: " +streets_array);
 
                                 var insert_query = "INSERT INTO streets (street_name) VALUES (?)";
 
-                                $cordovaSQLite.insertCollection(db_,insert_query,["Abnobastraße","Adam-Riese-Straße","Adam-von-Au-Straße","Adlerstraße","Adolf-Becker-Straße"]).then(function () {
+                                $cordovaSQLite.insertCollection(db_,insert_query,streets_array).then(function () {
                                     $timeout(function () {
                                         query = "SELECT count(*) as cnt FROM streets";
 
@@ -390,6 +390,7 @@ pfAppF.factory('Logger', function ($log) {
 
 pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,AppReady,$timeout) {
 
+
     var hasPermission = function () {
         var q= $q.defer();
         AppReady.ready().then(function () {
@@ -418,9 +419,9 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
     };
 
     var addNotifications = function (dates,idStart,message,title,$scope) {
-        //hasPermission().then(function () {
             Logger.log(dates);
             var id = idStart;
+            var notifications = [];
             for (var i = 0; i < dates.length; i++) {
                 Logger.log("adding: ", id);
                 var msecPerDay = 24 * 60 * 60 * 1000,
@@ -428,28 +429,27 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
                     today = new Date(date),
                     yesterday = new Date(today.getTime() - msecPerDay);
 
-                $cordovaLocalNotification.add({
+                notifications.push({
                     id: id,
                     date: yesterday,
                     message: message,
-                    title: title
-                }, $scope).then(function () {
-                    Logger.log('added notification');
-                });
+                    title: title});
                 id++;
             }
+                $cordovaLocalNotification.add(notifications, $scope).then(function () {
+                    Logger.log('added notifications for '+title);
+                });
+
+
             $timeout(function () {
 
                 $cordovaLocalNotification.getScheduledIds($scope).then(function (scheduledIds) {
 
-                    Logger.log("Scheduled IDs: " + scheduledIds.join(','));
+                    Logger.log("Scheduled IDs: "+ scheduledIds.length +" "+ scheduledIds.join(','));
 
                 });
 
             },10000);
-        //},function()   {
-        //    Logger.log("addNotifications has no permission");
-        //});
     };
 
     var cancelNotifications = function(idStart, $scope) {
@@ -507,7 +507,8 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
 
     return {
         addNotificationForType: addNotificationForType,
-        cancelNotificationForType:cancelNotificationForType
+        cancelNotificationForType:cancelNotificationForType,
+        hasPermission:hasPermission
    }
 });
 
