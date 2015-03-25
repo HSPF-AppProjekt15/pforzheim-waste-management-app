@@ -507,7 +507,6 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
     return {
         addNotificationForType: addNotificationForType,
         cancelNotificationForType:cancelNotificationForType,
-        checkNotifications:checkNotifications,
         hasPermission:hasPermission
    }
 });
