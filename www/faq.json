@@ -1,26 +1,26 @@
 [
 	{
 		"question": "Was passiert bei Aktivierung der Push-Benachrichtigung?",
-		"answer": "Durch die Aktivierung der Push-Benachrichtigung erhalten Sie am Tag vor der Leerung eine Erinnerung auf Ihrem Handy angezeigt."
+		"answer": "Durch die Aktivierung der Push-Benachrichtigung erhalten Sie am Tag vor der Leerung um 18 Uhr eine Erinnerung auf Ihrem Gerät angezeigt."
 	},
 	{
-		"question": "Was bewirken die letzten fünf Schalter?",
-		"answer": "Durch die unteren fünf Schalter können Sie sich die Benachrichtigungen individuell konfigurieren. Möchten Sie z.B. keine Benachrichtigung für Biomüll erhalten so können Sie diese durch einen Klick auf den Schalter neben dem Schriftzug \"Biotonne\" deaktivieren."
+		"question": "Was bewirken die fünf Schalter für die Abfallarten?",
+		"answer": "Durch die unteren fünf Schalter können Sie sich die Benachrichtigungen individuell konfigurieren. Möchten Sie z.B. keine Benachrichtigung für Abfuhrtermine für die Biotonne erhalten, so können Sie diese durch einen Klick auf den Schalter \"Biotonne\" deaktivieren."
 	},
 	{
 		"question": "Wieso muss ich meine Straße und meine Hausnummer angeben?",
-		"answer": "Diese Daten sind notwendig damit wir Ihnen ihren persönlichen Abfall-Abfuhrkalender zur Verfügung stellen können."
+		"answer": "Diese Daten sind notwendig, damit wir Ihnen ihren persönlichen Abfall-Abfuhrkalender zur Verfügung stellen können."
 	},
 	{
 		"question": "Wieso kann mein Standort nicht lokalisiert werden?",
-		"answer": "Stellen Sie sicher, dass ihr Handy eine stabile Internetverbindung hat und die Standortdienste an Ihrem Handy aktiviert sind."
+		"answer": "Stellen Sie sicher, dass ihr Handy eine stabile Internetverbindung hat und die Standortdienste an Ihrem Handy aktiviert sind und die App Ihren Standort verwenden darf."
 	},
 	{
 		"question": "Warum wird mein Standort nicht richtig erkannt?",
-		"answer": "Die korrekte Ermittlung Ihres Standorts ist von vielen Faktoren abhängig. Leider können wir diese nicht beeinflussen."
+		"answer": "Die korrekte Ermittlung Ihres Standorts ist von vielen Faktoren wie bspw. dem GPS-Signal abhängig. Leider können wir diese nicht beeinflussen."
 	},
 	{
 		"question": "Nach der Lokalisierung erhalte ich die Meldung \"Es konnten keine Daten zur angegebenen Adresse gefunden werden\". Was soll ich tun?",
-		"answer": "In wenigen Fällen kann es passieren, dass in der Datenbank für Ihre Adresse keine Abfuhrtermine vorhanden sind. Geben Sie in diesem Fall eine andere Hausnummer ein und klicken Sie anschließnd auf \"Suchen\"."
+		"answer": "In wenigen Fällen kann es passieren, dass in der Datenbank für Ihre Adresse keine Abfuhrtermine vorhanden sind. Geben Sie in diesem Fall eine andere Hausnummer ein und klicken Sie anschließend auf \"Suchen\"."
 	}
 ]

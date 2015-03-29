@@ -1,3 +1,9 @@
+/**
+ * app.js
+ * Startpunkt der App. Initialisiert Abhängigkeiten und ruft DB-Initialisierung auf.
+ * @author Johannes Steier
+ */
+
 'use strict';
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
@@ -7,7 +13,9 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
     .config(function (localStorageServiceProvider) {
         localStorageServiceProvider.setPrefix('pforzheimAbfallApp');
     })
-
+    /*
+    App starten.
+     */
     .run(function (AppReady,$rootScope, $q,DB,Logger) {
         var q = $q.defer();
         $rootScope.dbReady = q.promise;

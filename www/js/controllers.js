@@ -1,16 +1,23 @@
+/**
+ * controller.js
+ * Steuert Logik der App. Public Methods werden über die App-GUI index.html aufgerufen. Wird von app.js referenziert.
+ * @author Johannes Steier, Jean Frederik Seiter, Vjaceslav Djugai
+ */
 'use strict';
 
-var pwm_url = "http://pfwastemanagementenv-hd7anwmmbc.elasticbeanstalk.com/ServletConnectorServlet";
-var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo";
+var pwm_url = "http://pfwastemanagementenv-hd7anwmmbc.elasticbeanstalk.com/ServletConnectorServlet"; // Link zum Middleware-Servlet
+var googleGeoLoc_API_Key = "AIzaSyDlZDoFEuMLSyEjFZovyj_WwDo-_fTNrmo"; // Google API Key für Reverse Geolocation
 
-var application;
+var application; // Angular Controller
 application = angular.module('app.controllers', [])
 
     .controller("AppCtrl", function AppCtrl($rootScope, $scope, $http, GeoLocation, DB, LoadingSpinner, localStorageService, $q, Logger, $timeout, Notifications, InitValueLoader, $window, Toast) {
+        // Objekt, um eingegebene Straße und Hausnr. zu speichern.
         $scope.query = {
             "street": "",
             "hnr": ""
         };
+        // Objekt, um die Abfuhrtermine der jeweiligen Abfall-Art in Arrays für die Laufzeit zu speichern.
         $scope.dates = {
             "RM": [],
             "RM14": [],
@@ -18,13 +25,16 @@ application = angular.module('app.controllers', [])
             "Papier": [],
             "Gelb": []
         };
-        $scope.showDates = false;
-        $scope.streetSuggestions = [];
-        $scope.searchBtn = false;
+        $scope.showDates = false; // Steuervariable für die Anzeige der Abfuhrtermine
+        $scope.streetSuggestions = []; // Array für Vorschläge bei Eingabe einer Straße
+        $scope.searchBtn = false; // Steuervariable für die Anzeige des "Suchen" Buttons
 
         $scope.popupHeight = {height: $window.innerHeight - 130 + "px"}; // Body Height der PopUps
-        $scope.faqs = [];
+        $scope.faqs = []; // Array für die FAQ
 
+        /*
+        Variablen/Einstellungen, die in der App gespeichert und beim Starten geladen werden.
+         */
         $scope.notifications = InitValueLoader.load("notifications");
         $scope.pushBio = InitValueLoader.load("Bio");
         $scope.pushGelb = InitValueLoader.load("Gelb");
@@ -32,17 +42,29 @@ application = angular.module('app.controllers', [])
         $scope.pushRM = InitValueLoader.load("RM");
         $scope.pushRM14 = InitValueLoader.load("RM14");
 
-        // Private Methods
+        /*
+        Private Methods
+         */
+        /**
+         * Logt msg über die Logger-Factory.
+         * @param msg
+         */
         function log(msg) {
             Logger.log(msg);
         }
 
+        /**
+         * Speichert die eingegebene Straße im lokalen Speicher des Geräts.
+         */
         function saveStreetChoice() {
             log("function saveStreetChoice");
             localStorageService.set('street', $scope.query.street);
             localStorageService.set('hnr', $scope.query.hnr);
         }
 
+        /**
+         * Lädt die Abfuhrtermine für die aktuell gespeicherte Straße aus der internen Datenbank.
+         */
         function loadDatesForCurrentStreet() {
             LoadingSpinner.show();
             log("function loadDatesForCurrentStreet");
@@ -88,6 +110,12 @@ application = angular.module('app.controllers', [])
             })
         }
 
+        /**
+         * Sucht address.street rekursiv in der internen Datenbank.
+         * @param address
+         * @param count
+         * @returns {fd.g.promise|*}
+         */
         function searchForStreetName(address, count) {
             log("searchForStreetName", address, count);
             count = count || 0;
@@ -114,6 +142,11 @@ application = angular.module('app.controllers', [])
             return def.promise;
         }
 
+        /**
+         * Gibt die Abfuhrtermine einer bestimmten Abfall-Art aus der DB zurück.
+         * @param type
+         * @returns {fd.g.promise|*}
+         */
         function getDatesForType(type) {
             log("getDatesForType: " + type);
             var q = $q.defer();
@@ -124,6 +157,11 @@ application = angular.module('app.controllers', [])
             return q.promise;
         }
 
+        /**
+         * Ruft für die mitgegebene Abfall-Art die Notifications-Factory auf, um Benachrichtigungen hinzuzufügen.
+         * @param active
+         * @param type
+         */
         function setNotifications(active, type) {
             localStorageService.set(type, active);
             if (active === true) {
@@ -135,7 +173,9 @@ application = angular.module('app.controllers', [])
             }
         }
 
-
+        /**
+         * Initialisierung des Controllers: Straße und Hausnr. aus Speicher laden und ggf. Abfuhrtermine laden.
+         */
         function initController() {
             if (localStorageService.get('street') && localStorageService.get('hnr')) {
                 $scope.query.street = localStorageService.get('street');
@@ -147,9 +187,15 @@ application = angular.module('app.controllers', [])
             });
         }
 
-        // Public Methods
+        /*
+        Public Methods
+         */
 
-        // TODO: zuerst interne DB abfragen, bevor Servlet abgefragt wird
+
+
+        /**
+         * Aufruf der Middleware mit eingegebener Straße und Hausnr., zurückgegebene Termine werden in DB gespeichert.
+         */
         $scope.getDates = function () {
             LoadingSpinner.show();
 
@@ -158,6 +204,7 @@ application = angular.module('app.controllers', [])
 
             var dates = [];
             log("getDates Sende Straße und Hausnummer: " + $scope.query.street + " " + $scope.query.hnr);
+            // TODO: zuerst interne DB abfragen, bevor Servlet abgefragt wird
             $http.get(pwm_url + '?strasse=' + $scope.query.street + '&hnr=' + $scope.query.hnr).
                 success(function (data) {
                     log("getDates Antwort erhalten:", data);
@@ -202,7 +249,11 @@ application = angular.module('app.controllers', [])
                 });
         };
 
-
+        /**
+         * Sucht eingegebene Straße in DB, um Vorschläge anzuzeigen.
+         * @param street
+         * @param hnr
+         */
         $scope.getStreets = function (street, hnr) {
             log("function getStreets: " + street);
             $scope.updateSearchBtn();
@@ -223,7 +274,9 @@ application = angular.module('app.controllers', [])
             }
         };
 
-
+        /**
+         * Abfrage des Standorts über GeoLocation-Factory.
+         */
         $scope.getStreetFromLocation = function () {
 
             log("getStreetFromLocation");
@@ -263,16 +316,27 @@ application = angular.module('app.controllers', [])
                 });
         };
 
+        /**
+         * Einstellen der Sichtbarkeit des Suchen-Buttons.
+         */
         $scope.updateSearchBtn = function () {
+            // Suchen-Button wird nur angezeigt, wenn Straße und Hausnummer eingegeben wurden
             $scope.searchBtn = ($scope.query.street != "" && $scope.query.hnr > 0);
         };
 
+        /**
+         * Straße speichern und Vorschläge ausblenden. Wird aufgerufen, wenn Straße aus den Vorschlägen ausgewählt wurde.
+         * @param street
+         */
         $scope.selectStreet = function (street) {
             $scope.query.street = street;
             $scope.showSuggestions = false;
         };
 
 
+        /**
+         * Überwachung des Push-Notification Reglers.
+         */
         $scope.$watch('notifications', function (newValue, oldValue) {
             // Check if value has changes
             if (newValue === oldValue) {
@@ -305,6 +369,9 @@ application = angular.module('app.controllers', [])
             });
         }, true);
 
+        /**
+         * Überwachung des Reglers für Notifications bei Biotonne.
+         */
         $scope.$watch('pushBio', function (newValue, oldValue) {
             // Check if value has changes and set notifications
             if (newValue !== oldValue) {
@@ -312,6 +379,9 @@ application = angular.module('app.controllers', [])
             }
         }, true);
 
+        /**
+         * Überwachung des Reglers für Notifications bei Gelber Sack.
+         */
         $scope.$watch('pushGelb', function (newValue, oldValue) {
             // Check if value has changes and set notifications
             if (newValue !== oldValue) {
@@ -319,6 +389,9 @@ application = angular.module('app.controllers', [])
             }
         }, true);
 
+        /**
+         * Überwachung des Reglers für Notifications bei Papiertonne.
+         */
         $scope.$watch('pushPapier', function (newValue, oldValue) {
             // Check if value has changes and set notifications
             if (newValue !== oldValue) {
@@ -326,6 +399,9 @@ application = angular.module('app.controllers', [])
             }
         }, true);
 
+        /**
+         * Überwachung des Reglers für Notifications bei 7-tägigem Restmüll.
+         */
         $scope.$watch('pushRM', function (newValue, oldValue) {
             // Check if value has changes and set notifications
             if (newValue !== oldValue) {
@@ -333,6 +409,9 @@ application = angular.module('app.controllers', [])
             }
         }, true);
 
+        /**
+         * Überwachung des Reglers für Notifications bei 14-tägigem Restmüll.
+         */
         $scope.$watch('pushRM14', function (newValue, oldValue) {
             // Check if value has changes and set notifications
             if (newValue !== oldValue) {
@@ -340,11 +419,11 @@ application = angular.module('app.controllers', [])
             }
         }, true);
 
-        // INIT CONTROLLER
+        /**
+         * Wenn Datenbank bereit ist, Controller initialisieren.
+         */
         $rootScope.dbReady.then(function () {
             log("AppCtrl dbReady fired");
-
-
             initController();
         });
     });

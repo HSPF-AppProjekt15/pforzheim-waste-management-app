@@ -1,6 +1,15 @@
+/**
+ * factories.js
+ * Stellt Factories (Services) zur Verfügung, die Zugriff auf die Plug-Ins übernehmen.
+ * @author Johannes Steier, Jean Frederik Seiter
+ */
+
 'use strict';
 
 var pfAppF = angular.module('app.factories', []);
+/**
+ * AppReady: Event Listener für deviceready Event. Wird aufgerufen, wenn PhoneGap initialisiert wurde.
+ */
 pfAppF.factory('AppReady', function ($q, $rootScope,Logger) {
     var q = $q.defer();
 
@@ -11,6 +20,7 @@ pfAppF.factory('AppReady', function ($q, $rootScope,Logger) {
     } else {
         onDeviceReady();
     }
+
     function onDeviceReady() {
         Logger.log("AppReady Factory: app is ready");
         $rootScope.$apply(q.resolve());
@@ -23,6 +33,9 @@ pfAppF.factory('AppReady', function ($q, $rootScope,Logger) {
     }
 });
 
+/**
+ * DB: Zugriffe auf die Datenbank und Funktionen, die DB-Abfragen regeln.
+ */
 pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeout) {
 
     var db_;
@@ -31,7 +44,9 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         Logger.log(msg);
     }
 
-    // private methods
+    /*
+    Private Methods
+     */
     var openDB_ = function (dbName) {
         log("openDB_ called", dbName);
         var q = $q.defer();
@@ -92,7 +107,14 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         return q.promise;
     };
 
+    /*
+    Public Methods
+     */
 
+    /**
+     * Initialisiert Datenbank.
+     * @returns {fd.g.promise|*}
+     */
     var initDB = function () {
         log("initDB called");
         var q = $q.defer();
@@ -157,6 +179,11 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         return q.promise;
     };
 
+    /**
+     * Suche der übergebenen Straße in der DB und Rückgabe der Vorschläge.
+     * @param street
+     * @returns {fd.g.promise|*}
+     */
     var getStreets = function (street) {
         log("DB.getStreets(): " + street);
         var query = "SELECT street_name FROM streets WHERE street_name LIKE ? LIMIT 5",
@@ -178,6 +205,13 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         return q.promise;
     };
 
+    /**
+     * Gibt Abfuhrtermine für Abfallart und Straße+Hausnr. zurück.
+     * @param type
+     * @param street
+     * @param hnr
+     * @returns {fd.g.promise|*}
+     */
     var getDatesForType = function (type, street, hnr) {
         var query = "SELECT collection_date FROM collection_dates WHERE waste_type= ? AND (SELECT street_id FROM streets WHERE street_name= ? ) AND house_number = ? AND collection_date > date('now','localtime') ORDER BY collection_dates.collection_date",
             q = $q.defer(),
@@ -198,6 +232,11 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
 
     };
 
+    /**
+     * Gibt Straßennamen zurück, wenn er in der DB gefunden wurde. Wird benutzt, um Problematik mit "Straße" und "Str." zu lösen.
+     * @param street
+     * @returns {fd.g.promise|*}
+     */
     var isStreetInDB = function (street) {
         // erst schauen, ob Straße genau so in DB ist
         var query = "SELECT street_name FROM streets WHERE street_name = ?",
@@ -229,6 +268,12 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         return q.promise;
     };
 
+    /**
+     * Gibt Abfuhrtermine für Straße und Hausnr. zurück.
+     * @param street
+     * @param number
+     * @returns {fd.g.promise|*}
+     */
     var loadDatesForCurrentStreet = function (street, number) {
         var query = "SELECT waste_type,strftime('%d.%m.%Y',collection_date) as collection_date FROM collection_dates WHERE street_id=(SELECT street_id FROM streets WHERE street_name= ? ) AND house_number= ? AND collection_date BETWEEN date('now','localtime') AND date('now', '+21 days','localtime') ORDER BY collection_dates.collection_date,1",
             q = $q.defer();
@@ -240,8 +285,13 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         return q.promise;
     };
 
-    // TODO: alte Einträge wieder löschen
+    /**
+     * Schreibt Abfuhrtermine in die DB.
+     * @param dates
+     * @returns {fd.g.promise|*}
+     */
     var putDatesIntoDatabase = function (dates) {
+        // TODO: alte Einträge wieder löschen
         var insert_query = "INSERT OR REPLACE INTO collection_dates (street_id, house_number, waste_type, collection_date, date_added) VALUES ((SELECT street_id FROM streets WHERE street_name = ?), ?, ?, ?, ?)",
             q = $q.defer();
         for (var i = 0; i < dates.length; i++) {
@@ -264,8 +314,19 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         getDatesForType: getDatesForType
     }
 });
+
+/**
+ * GeoLocation: Gibt Standort des Geräts zurück.
+ */
 pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) {
+    /*
+    Public Methods
+     */
     return {
+        /**
+         * Gibt Straßenname und Hausnr. für aktuelle Position des Geräts zurück.
+         * @returns {fd.g.promise|*}
+         */
         getStreetName: function () {
             Logger.log("GeoLocation.getStreetName()");
             var posOptions = {
@@ -312,10 +373,20 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) 
         }
     };
 });
+
+/**
+ * LoadingSpinner: Übernimmt Anzeige der Ladeanimation.
+ */
 pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout, $cordovaSpinnerDialog) {
     var spinner_,
         _isActive = false;
 
+    /*
+    Public Methods
+     */
+    /**
+     * Ladeanimation anzeigen.
+     */
     var show = function () {
         //spinnerplugin.show();
         console.log("Spinnerplugin show");
@@ -335,6 +406,9 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout, $cordovaSp
             }
         }
     };
+    /**
+     * Ladeanimation ausblenden.
+     */
     var hide = function () {
         if(isAvailable()) {
             $cordovaSpinnerDialog.hide();
@@ -342,9 +416,18 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout, $cordovaSp
         }
     };
 
+    /**
+     * Gibt zurück, ob Ladeanimation angezeigt oder ausgeblendet ist.
+     * @returns {boolean}
+     */
     var isActive = function() {
         return _isActive;
     };
+
+    /**
+     * Überprüft, ob Ladeanimation-Plugin zur Verfügung steht.
+     * @returns {boolean}
+     */
     function isAvailable() {
         if(!window.plugins) {
             return false;
@@ -366,9 +449,19 @@ pfAppF.factory('LoadingSpinner', function (Logger,AppReady, $timeout, $cordovaSp
     }
 });
 
+/**
+ * Logger: Logging in der Console.
+ */
 pfAppF.factory('Logger', function ($log) {
     var useConsole=true,
         count=0;
+    /*
+    Public Methods
+     */
+    /**
+     * Loggt msg.
+     * @param msg
+     */
     var log = function (msg) {
         msg=count+': '+msg;
         count++;
@@ -388,35 +481,23 @@ pfAppF.factory('Logger', function ($log) {
     }
 });
 
+/**
+ * Notifications: Speichert, löscht Benachrichtigungen und prüft Zugriff auf Notification-Service.
+ */
 pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,AppReady,$timeout) {
 
-    var hasPermission = function () {
-        var q= $q.defer();
-        AppReady.ready().then(function () {
-            Logger.log("app is ready, checking permissions");
-            try {
+/*
+Private Methods
+ */
 
-               $cordovaLocalNotification.hasPermission().then(function () {
-                   Logger.log('Permission already has been granted.');
-                   q.resolve();
-               }, function() {
-                   $cordovaLocalNotification.registerPermission().then(function () {
-                       Logger.log('Permission has been granted after prompt.');
-                       q.resolve();
-                   }, function () {
-                       Logger.log('Permission has not been granted after prompt.');
-                       q.reject();
-                   });
-               });
-            }
-            catch (err) {
-                Logger.log(err);
-                q.reject();
-            }
-        });
-        return q.promise;
-    };
-
+    /**
+     * Fügt eine Notification hinzu.
+     * @param dates
+     * @param idStart
+     * @param message
+     * @param title
+     * @param $scope
+     */
     var addNotifications = function (dates,idStart,message,title,$scope) {
             Logger.log(dates);
             var id = idStart;
@@ -451,6 +532,11 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
             },10000);
     };
 
+    /**
+     * Löscht eine Notification.
+     * @param idStart
+     * @param $scope
+     */
     var cancelNotifications = function(idStart, $scope) {
         $cordovaLocalNotification.getScheduledIds($scope).then(function (scheduledIds) {
             for (var i = 0; i < scheduledIds.length; i++) {
@@ -463,6 +549,46 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
         });
     };
 
+    /*
+    Public Methods
+     */
+    /**
+     * Erfolgreich, wenn Notifications eingetragen werden können. Hauptsächlich für iOS relevant.
+     * @returns {fd.g.promise|*}
+     */
+    var hasPermission = function () {
+        var q= $q.defer();
+        AppReady.ready().then(function () {
+            Logger.log("app is ready, checking permissions");
+            try {
+
+                $cordovaLocalNotification.hasPermission().then(function () {
+                    Logger.log('Permission already has been granted.');
+                    q.resolve();
+                }, function() {
+                    $cordovaLocalNotification.registerPermission().then(function () {
+                        Logger.log('Permission has been granted after prompt.');
+                        q.resolve();
+                    }, function () {
+                        Logger.log('Permission has not been granted after prompt.');
+                        q.reject();
+                    });
+                });
+            }
+            catch (err) {
+                Logger.log(err);
+                q.reject();
+            }
+        });
+        return q.promise;
+    };
+
+    /**
+     * Fügt Notifications für eine Abfallart hinzu.
+     * @param type
+     * @param dates
+     * @param $scope
+     */
     var addNotificationForType = function (type,dates,$scope) {
         switch (type) {
             case "Bio":
@@ -484,6 +610,11 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
 
     };
 
+    /**
+     * Löscht Notifications einer Abfallart.
+     * @param type
+     * @param $scope
+     */
     var cancelNotificationForType = function (type, $scope) {
         switch (type) {
             case "Bio":
@@ -511,8 +642,18 @@ pfAppF.factory('Notifications', function ($q,Logger, $cordovaLocalNotification,A
    }
 });
 
+/**
+ * InitValueLoad: Lädt Variable/Einstellung aus lokalem Speicher.
+ */
 pfAppF.factory('InitValueLoader', function (localStorageService) {
-
+    /*
+    Private Methods
+     */
+    /**
+     * Wandelt den String in Boolean um.
+     * @param string
+     * @returns {boolean}
+     */
     var stringToBoolean = function (string) {
         switch (string) {
             case "true":
@@ -524,6 +665,14 @@ pfAppF.factory('InitValueLoader', function (localStorageService) {
         }
     };
 
+    /*
+    Public Methods
+     */
+    /**
+     * Gibt Variable/Einstellung aus lokalem Speicher zurück.
+     * @param type
+     * @returns {boolean}
+     */
     var load = function(type) {
         var value = localStorageService.get(type);
         return stringToBoolean(value);
@@ -534,12 +683,25 @@ pfAppF.factory('InitValueLoader', function (localStorageService) {
     }
 });
 
+/**
+ * Toast: Zeigt Popup-Benachrichtigungen an.
+ */
 pfAppF.factory('Toast', function ($cordovaToast) {
-
+    /*
+    Public Methods
+     */
+    /**
+     * msg als Popup anzeigen.
+     * @param msg
+     */
     var show = function (msg) {
         $cordovaToast.showLongTop(msg);
     };
 
+    /**
+     * True, wenn Toast-Plugin zur Verfügung steht.
+     * @returns {boolean}
+     */
     var isAvailable = function () {
         if(!window.plugins) {
             return false;
