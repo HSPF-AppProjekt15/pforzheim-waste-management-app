@@ -26,7 +26,7 @@ angular.module('starter', ['ngRoute', 'mobile-angular-ui', 'ngCordova', 'LocalSt
                 Logger.log("initDB promise resolved, dbReady resolved");
             }, function (err) {
                 q.reject();
-                Logger.log("App.js Fehler:", err);
+                Logger.log("App.js Fehler: "+ err);
             });
 
         });

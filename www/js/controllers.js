@@ -69,16 +69,16 @@ application = angular.module('app.controllers', [])
             LoadingSpinner.show();
             log("function loadDatesForCurrentStreet");
             $scope.dates = [];
+            // Abfuhrtermine aus interner Datenbank laden
             DB.loadDatesForCurrentStreet($scope.query.street, $scope.query.hnr).then(function (res) {
                 log("DB.loadDatesForCurrentStreet result length: " + res.rows.length);
                 if (res.rows.length > 0) {
-                    var loop_last_change_cd;
-                    var last_index = 0;
-                    var loop;
+                    var loop_last_change_cd = "",
+                        last_index = 0,
+                        loop;
+                    // Die Abfall-Arten werden pro Abfuhrtermin gesammelt -> in einen mehrdimensionalen Array gepackt
                     for (var i = 0; i < res.rows.length; i++) {
                         loop = res.rows.item(i);
-                        //log("loop", loop);
-                        //log("loop_before", loop_last_change_cd);
                         if (loop.collection_date == loop_last_change_cd) {
                             // collection_date ist gleich, waste_type wird dem zweiten property des objects dates hinzugefügt
                             $scope.dates[last_index].waste_type.push(loop.waste_type);
@@ -96,7 +96,7 @@ application = angular.module('app.controllers', [])
 
                     }
                     $scope.showDates = true;
-                } else {
+                } else { // keine Abfuhrtermine gefunden
                     $scope.showDates = false;
                     log("loadDatesForCurrentStreet: no result");
                     if (Toast.isAvailable()) {
@@ -112,6 +112,7 @@ application = angular.module('app.controllers', [])
 
         /**
          * Sucht address.street rekursiv in der internen Datenbank.
+         * Wird verwendet, um die Problematik mit "Straße", "Strasse" und "Str." zu lösen.
          * @param address
          * @param count
          * @returns {fd.g.promise|*}
@@ -121,12 +122,12 @@ application = angular.module('app.controllers', [])
             count = count || 0;
             var street = address.street,
                 def = $q.defer();
+            // Datenbankabfrage, ob Straße in Straßen-Tabelle ist
             DB.isStreetInDB(street).then(function (res_street) {
                 def.resolve({street: res_street, number: address.number});
             }, function () {
-                // Maximal 4 Durchgänge
-                if (count < 4) {
-
+                // Wenn nicht, das letzte Zeichen entfernen und erneut suchen.
+                if (count < 4) { // Maximal 4 Durchgänge
                     searchForStreetName({
                         street: street.substring(0, street.length - 1),
                         number: address.number
@@ -164,11 +165,11 @@ application = angular.module('app.controllers', [])
          */
         function setNotifications(active, type) {
             localStorageService.set(type, active);
-            if (active === true) {
+            if (active === true) { // Checkbox wurde aktiviert
                 getDatesForType(type).then(function (res) {
                     Notifications.addNotificationForType(type, res, $scope);
                 });
-            } else {
+            } else { // Checkbox wurde deaktiviert
                 Notifications.cancelNotificationForType(type, $scope);
             }
         }
@@ -205,12 +206,12 @@ application = angular.module('app.controllers', [])
             var dates = [];
             log("getDates Sende Straße und Hausnummer: " + $scope.query.street + " " + $scope.query.hnr);
             // TODO: zuerst interne DB abfragen, bevor Servlet abgefragt wird
+            // Middleware-Servlet wird nach Straße und Hausnummr angefragt
             $http.get(pwm_url + '?strasse=' + $scope.query.street + '&hnr=' + $scope.query.hnr).
                 success(function (data) {
                     log("getDates Antwort erhalten:", data);
 
-
-                    // In Datenbank schreiben
+                    // Termine in Datenbank schreiben. Davor das Datum richtig formatieren.
                     angular.forEach(data, function (value, key) {
                         log("key", key);
 
@@ -259,7 +260,7 @@ application = angular.module('app.controllers', [])
             $scope.updateSearchBtn();
             $scope.streetSuggestions = [];
 
-            if (street.length > 0) {
+            if (street.length > 0) { // Wurden Straßen, die mit den eingegebenen Zeichen anfangen, gefunden, die Vorschläge anzeigen.
                 DB.getStreets(street).then(function (streetSuggestions) {
                     log(streetSuggestions);
                     $scope.streetSuggestions = streetSuggestions;
@@ -278,18 +279,17 @@ application = angular.module('app.controllers', [])
          * Abfrage des Standorts über GeoLocation-Factory.
          */
         $scope.getStreetFromLocation = function () {
-
             log("getStreetFromLocation");
-
             LoadingSpinner.show();
 
+            // Straßenname und Hausnr. zur aktuellen Position ermitteln
             GeoLocation.getStreetName().then(function (address) {
                     if (address.street == "") {
                         $scope.showDates = false;
                         LoadingSpinner.hide();
                     } else {
 
-                        // Schauen, ob Straße in DB
+                        // Schauen, ob Straße in DB (also in Pforzheim) ist und ggf. Abfuhrtermine abfragen.
                         searchForStreetName(address).then(function (result) {
                             $scope.query.street = result.street;
                             $scope.query.hnr = result.number;
@@ -344,6 +344,7 @@ application = angular.module('app.controllers', [])
             }
 
             Notifications.hasPermission().then(function () {
+                // Alle Notifications-Checkboxes an- bzw. abschalten
                 localStorageService.set("notifications", newValue);
                 if (newValue === true) {
                     if (Toast.isAvailable()) {

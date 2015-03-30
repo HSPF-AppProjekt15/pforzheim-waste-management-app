@@ -16,7 +16,7 @@ pfAppF.factory('AppReady', function ($q, $rootScope,Logger) {
     var isCordovaApp = (typeof window.cordova !== "undefined");
     if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
         //if(isCordovaApp) {
-        document.addEventListener("deviceready", onDeviceReady, false);
+        document.addEventListener("deviceready", onDeviceReady, false); // deviceready wird von PhoneGap/Cordova getriggered
     } else {
         onDeviceReady();
     }
@@ -47,6 +47,12 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
     /*
     Private Methods
      */
+    /**
+     * Datenbankverbindung aufbauen bzw. Datenbank anlegen, falls sie noch nicht existiert.
+     * @param dbName
+     * @returns {fd.g.promise|*}
+     * @private
+     */
     var openDB_ = function (dbName) {
         log("openDB_ called", dbName);
         var q = $q.defer();
@@ -65,6 +71,13 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         return q.promise;
     };
 
+    /**
+     * Tabelle tableName mit Feldern schema anlegen.
+     * @param tableName
+     * @param schema
+     * @returns {fd.g.promise|*}
+     * @private
+     */
     var createTable_ = function (tableName, schema) {
         log("createTable called");
         var q = $q.defer(),
@@ -80,6 +93,13 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         return q.promise;
     };
 
+    /**
+     * Select-Abfrage ausführen. Gibt Ergebnis der Abfrage zurück.
+     * @param sqlStatement
+     * @param bindings
+     * @returns {fd.g.promise|*}
+     * @private
+     */
     var selectFromTable_ = function (sqlStatement, bindings) {
         var q = $q.defer();
         log("selectFromTable_: "+sqlStatement + "; "+ bindings.join());
@@ -94,6 +114,13 @@ pfAppF.factory('DB', function ($q, $cordovaSQLite, $http, Logger,AppReady,$timeo
         return q.promise;
     };
 
+    /**
+     * Insert-Abfrage ausführen. Gibt Ergebnis der Abfrage zurück.
+     * @param sqlStatement
+     * @param bindings
+     * @returns {fd.g.promise|*}
+     * @private
+     */
     var insertIntoTable_ = function (sqlStatement, bindings) {
         var q = $q.defer();
 
@@ -340,7 +367,7 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) 
                 deferred = $q.defer();
 
             $cordovaGeolocation
-                .getCurrentPosition(posOptions)
+                .getCurrentPosition(posOptions) // GPS Koordinaten ermitteln
                 .then(function (position) {
                     var lat = position.coords.latitude,
                         long = position.coords.longitude,
@@ -348,6 +375,7 @@ pfAppF.factory('GeoLocation', function ($http, $cordovaGeolocation, $q, Logger) 
 
                     Logger.log("getCurrentPosition: " + lat + "," + long);
 
+                    // Über Google Maps API Reverse Lookup ausführen: aus Koordinaten wird die Straße und Hausnr. ermittelt.
                     $http.get(url).
                         success(function (data) {
                             Logger.log("GeoLocation.getStreetName Antwort erhalten:" + data);
@@ -505,9 +533,9 @@ Private Methods
             for (var i = 0; i < dates.length; i++) {
                 Logger.log("adding: ", id);
                 var msecPerDay = 24 * 60 * 60 * 1000,
-                    date = dates[i] + "T17:00:00",
+                    date = dates[i] + "T17:00:00",// 17:00 Uhr GMT
                     today = new Date(date),
-                    yesterday = new Date(today.getTime() - msecPerDay);
+                    yesterday = new Date(today.getTime() - msecPerDay); // Erinnerung am Vortag
 
                 notifications.push({
                     id: id,
@@ -519,17 +547,7 @@ Private Methods
                 $cordovaLocalNotification.add(notifications, $scope).then(function () {
                     Logger.log('added notifications for '+title);
                 });
-
-
-            $timeout(function () {
-
-                $cordovaLocalNotification.getScheduledIds($scope).then(function (scheduledIds) {
-
-                    Logger.log("Scheduled IDs: "+ scheduledIds.length +" "+ scheduledIds.join(','));
-
-                });
-
-            },10000);
+        
     };
 
     /**
