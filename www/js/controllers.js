@@ -158,7 +158,7 @@ application = angular.module('app.controllers', [])
         }
 
         /**
-         * Ruft für die mitgegebene Abfall-Art die Notifications-Factory auf, um Benachrichtigungen hinzuzufügen.
+         * Ruft für die mitgegebene Abfall-Art die Notifications-Factory auf, um Benachrichtigungen hinzuzufügen oder zu löschen.
          * @param active
          * @param type
          */
