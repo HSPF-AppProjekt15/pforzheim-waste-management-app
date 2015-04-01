@@ -67,9 +67,10 @@
 <!--Body-->
 <div class="app-body">
     <div class="app-content">
+        <div ng-controller="AppCtrl" ng-init="updateHnr(query.street, query.hnr)">
         <div class="scrollable">
             <div class="scrollable-content">
-                <div ng-controller="AppCtrl" ng-init="updateHnr(query.street, query.hnr)">
+
                     <div class="container-fluid">
 
                         <!--Eingabefelder-->
@@ -236,15 +237,16 @@
                             </div>
                         </div>
                     </div>
-                    <div ui-yield-to="modals"></div>
-                    <div ui-content-for="modals">
-                        <div ng-include="'legende.html'"></div>
-                        <div ng-include="'datenschutz.html'"></div>
-                        <div ng-include="'impressum.html'"></div>
-                        <div ng-include="'faq.html'"></div>
-                    </div>
+
 
                 </div>
+            </div>
+            <div ui-yield-to="modals"></div>
+            <div ui-content-for="modals">
+                <div ng-include="'legende.html'"></div>
+                <div ng-include="'datenschutz.html'"></div>
+                <div ng-include="'impressum.html'"></div>
+                <div ng-include="'faq.html'"></div>
             </div>
         </div>
     </div>
