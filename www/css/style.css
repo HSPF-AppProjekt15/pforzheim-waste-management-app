@@ -72,3 +72,7 @@ author: Jean Frederik Seiter, Johannes Steier
 body, html {
     -ms-overflow-style: none !important;
 }
+
+h4 {
+    margin-bottom: 0px;
+}
