@@ -19,6 +19,9 @@
     under the License.
 */
 
+
+var channel = require('cordova/channel');
+
 exports = require('de.appplant.cordova.plugin.local-notification.LocalNotification.Proxy.Core').core;
 
 
@@ -66,25 +69,69 @@ exports.getRepeatInterval = function (every) {
 };
 
 /**
+ * If the notification is repeating.
+ *
+ * @param {Object} notification
+ *      Local notification object
+ *
+ * @return Boolean
+ */
+exports.isRepeating = function (notification) {
+    return this.getRepeatInterval(notification.every) !== 0;
+};
+
+/**
  * Parses sound file path.
  *
  * @param {String} path
  *      Relative path to sound resource
  *
- * @return {String} URI to Sound-File
+ * @return {String} XML Tag for Sound-File
  */
 exports.parseSound = function (path) {
+	if (!path.match(/^file/))
+		return '';
+
+	var uri = this.parseUri(path),
+		audio = "<audio src=" + uri + " loop='false'/>";
+
+	return audio;
+};
+
+/**
+ * Parses image file path.
+ *
+ * @param {String} path
+ *      Relative path to image resource
+ *
+ * @return {String} XML-Tag for Image-File
+ */
+exports.parseImage = function (path) {
+    if (!path.match(/^file/))
+        return '';
+
+    var uri = this.parseUri(path),
+        image = "<image id='1' src=" + uri + " />";
+
+    return image;
+};
+
+/**
+ * Parses file path to URI.
+ *
+ * @param {String} path
+ *      Relative path to a resource
+ *
+ * @return {String} URI to File
+ */
+exports.parseUri = function (path) {
     var pkg = Windows.ApplicationModel.Package.current,
         pkgId = pkg.id,
         pkgName = pkgId.name;
 
-    if (!path.match(/^file/))
-        return;
+	var uri = "'ms-appx://" + pkgName + "/www" + path.slice(6, path.length) + "'";
 
-    var sound = "'ms-appx://" + pkgName + "/www/" + path.slice(6, path.length) + "'",
-        audio = "<audio src=" + sound + " loop='false'/>";
-
-    return audio;
+	return uri;
 };
 
 /**
@@ -126,37 +173,47 @@ exports.build = function (options) {
  * @return String
  */
 exports.buildToastTemplate = function (options) {
-    var title = options.title,
-        message = options.text || '',
-        json = JSON.stringify(options),
-        sound = '';
+	var title = options.title,
+		message = options.text || '',
+		json = JSON.stringify(options),
+		sound = '';
 
-    if (options.sound && options.sound !== '') {
-        sound = this.parseSound(options.sound);
-    }
+	if (options.sound && options.sound !== '') {
+		sound = this.parseSound(options.sound);
+	}
 
-    if (title && title !== '') {
-        return  "<toast>" +
-                    "<visual>" +
-                        "<binding template='ToastText02'>" +
-                            "<text id='1'>" + title + "</text>" +
-                            "<text id='2'>" + message + "</text>" +
-                        "</binding>" +
-                    "</visual>" +
-                    sound +
-                    "<json>" + json + "</json>" +
-                "</toast>";
-    } else {
-        return  "<toast>" +
-                    "<visual>" +
-                        "<binding template='ToastText01'>" +
-                            "<text id='1'>" + message + "</text>" +
-                        "</binding>" +
-                    "</visual>" +
-                    sound +
-                    "<json>" + json + "</json>" +
-                "</toast>";
-    }
+	var templateName = "ToastText",
+		imageNode;
+	if (options.icon && options.icon !== '') {
+		imageNode = this.parseImage(options.icon);
+		// template with Image
+		if (imageNode !== '') {
+			templateName = "ToastImageAndText";
+		};
+	} else {
+		imageNode = "";
+	}
+
+	var bindingNode;
+	if (title && title !== '') {
+		bindingNode = "<binding template='" + templateName + "02'>" +
+							imageNode +
+							"<text id='1'>" + title + "</text>" +
+							"<text id='2'>" + message + "</text>" +
+						"</binding>";
+	} else {
+		bindingNode = "<binding template='" + templateName + "01'>" +
+							imageNode +
+							"<text id='1'>" + message + "</text>" +
+						"</binding>";
+	}
+	return "<toast>" +
+				"<visual>" +
+						bindingNode +
+				"</visual>" +
+				sound +
+				"<json>" + json + "</json>" +
+			"</toast>";
 };
 
 /**
@@ -240,6 +297,9 @@ exports.isToastTriggered = function (toast) {
         notification = this.getAll(id)[0];
         fireDate = new Date((notification.at) * 1000);
 
+    if (this.isRepeating(notification))
+        return false;
+
     return fireDate <= new Date();
 };
 
@@ -289,6 +349,20 @@ exports.callOnTrigger = function (notification, callback) {
 };
 
 /**
+ * Sets trigger event for all scheduled local notification.
+ *
+ * @param {Function} callback
+ *      Callback function
+ */
+exports.callOnTriggerForScheduled = function (callback) {
+    var notifications = this.getScheduled();
+
+    for (var i = 0; i < notifications.length; i++) {
+        this.callOnTrigger(notifications[i], callback);
+    }
+};
+
+/**
  * The application state - background or foreground.
  *
  * @return String
@@ -328,6 +402,31 @@ exports.fireEvent = function (event, notification) {
  * LIFE CYCLE *
  **************/
 
+// Called before 'deviceready' event
+channel.onCordovaReady.subscribe(function () {
+    // Register trigger handler for each scheduled notification
+    exports.callOnTriggerForScheduled(function (notification) {
+        this.updateBadge(notification.badge);
+        this.fireEvent('trigger', notification);
+    });
+});
+
+// Handle onclick event
+WinJS.Application.addEventListener('activated', function (args) {
+    var id = args.detail.arguments,
+        notification = exports.getAll([id])[0];
+
+    if (!notification)
+        return;
+
+    exports.clearLocalNotification(id);
+
+    var repeating = exports.isRepeating(notification);
+
+    exports.fireEvent('click', notification);
+    exports.fireEvent(repeating ? 'clear' : 'cancel', notification);
+}, false);
+
 // App is running in background
 document.addEventListener('pause', function () {
     exports.isInBackground = true;
@@ -341,16 +440,4 @@ document.addEventListener('resume', function () {
 // App is running in foreground
 document.addEventListener('deviceready', function () {
     exports.isInBackground = false;
-}, false);
-
-// Handle onclick event
-WinJS.Application.addEventListener('activated', function (args) {
-    var id = args.detail.arguments,
-        notification = exports.getAll([id])[0];
-
-    if (!notification)
-        return;
-
-    exports.clearLocalNotification(id);
-    exports.fireEvent('click', notification);
 }, false);

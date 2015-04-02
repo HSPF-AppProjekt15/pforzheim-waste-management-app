@@ -547,7 +547,7 @@ Private Methods
                 $cordovaLocalNotification.add(notifications, $scope).then(function () {
                     Logger.log('added notifications for '+title);
                 });
-        
+
     };
 
     /**
